@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPERADMIN
+  OWNER
+  ADMIN
+  SPECIALIST
+  RECEPTIONIST
+  PATIENT
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+  BUSINESS
+  ENTERPRISE
+}
+
+enum SlotStatus {
+  LIBRE
+  TOMADO
+  BLOQUEADO
+}
+
+enum AppointmentStatus {
+  RESERVADA
+  CONFIRMADA
+  ATENDIDA
+  CANCELADA
+  NO_SHOW
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model Tenant {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  name         String
+  domain       String?      @unique
+  status       TenantStatus @default(ACTIVE)
+  plan         Plan         @default(FREE)
+
+  logoUrl      String?
+  primaryColor String?      @default("#000000")
+  theme        Json         @default("{}")
+
+  email        String?
+  phone        String?
+  address      String?
+  city         String?
+
+  timezone     String       @default("America/Santiago")
+
+  ownerId      String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  owner        User?           @relation("TenantOwner", fields: [ownerId], references: [id])
+  users        User[]          @relation("TenantUsers")
+  specialties  Specialty[]
+  specialists  Specialist[]
+  appointments Appointment[]
+  patients     Patient[]
+
+  @@index([status])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  password     String?
+  name         String?
+  phone        String?
+  role         UserRole  @default(PATIENT)
+  tenantId     String?
+  createdAt    DateTime  @default(now())
+
+  tenant       Tenant?   @relation("TenantUsers", fields: [tenantId], references: [id], onDelete: Cascade)
+  ownedTenants Tenant[]  @relation("TenantOwner")
+
+  @@index([tenantId])
+}
+
+model Specialty {
+  id           String       @id @default(cuid())
+  tenantId     String
+  name         String
+  description  String?
+  color        String?      @default("#000000")
+  order        Int          @default(0)
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  specialists  Specialist[]
+
+  @@index([tenantId])
+}
+
+model Specialist {
+  id                   String       @id @default(cuid())
+  tenantId             String
+  specialtyId          String
+  name                 String
+  rut                  String?
+  email                String?
+  phone                String?
+  photoUrl             String?
+
+  duracionConsulta     Int          @default(20)
+  anticipacionMinima   Int          @default(60)
+  anticipacionMaxima   Int          @default(60)
+
+  active               Boolean      @default(true)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  tenant               Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  specialty            Specialty      @relation(fields: [specialtyId], references: [id])
+  availabilities       Availability[]
+  breaks               Break[]
+  blocks               Block[]
+  slots                Slot[]
+  days                 SpecialistDay[]
+  appointments         Appointment[]
+
+  @@index([tenantId])
+  @@index([specialtyId])
+}
+
+model Availability {
+  id            String     @id @default(cuid())
+  specialistId  String
+  dayOfWeek     DayOfWeek
+  startTime     String
+  endTime       String
+  createdAt     DateTime   @default(now())
+
+  specialist    Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  @@index([specialistId])
+}
+
+model Break {
+  id            String     @id @default(cuid())
+  specialistId  String
+  dayOfWeek     DayOfWeek
+  startTime     String
+  endTime       String
+  label         String?
+  createdAt     DateTime   @default(now())
+
+  specialist    Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  @@index([specialistId])
+}
+
+model Block {
+  id            String     @id @default(cuid())
+  specialistId  String
+  date          DateTime
+  startTime     String?
+  endTime       String?
+  reason        String?
+  createdAt     DateTime   @default(now())
+
+  specialist    Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  @@index([specialistId])
+  @@index([date])
+}
+
+model Slot {
+  id            String     @id @default(cuid())
+  specialistId  String
+  date          DateTime
+  startTime     String
+  endTime       String
+  status        SlotStatus @default(LIBRE)
+  createdAt     DateTime   @default(now())
+
+  specialist    Specialist    @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  appointment   Appointment?
+
+  @@index([specialistId, date])
+  @@index([status])
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  tenantId      String
+  specialistId  String
+  slotId        String            @unique
+  patientId     String?
+  status        AppointmentStatus @default(RESERVADA)
+  notes         String?
+
+  patientName   String
+  patientRut    String?
+  patientEmail  String
+  patientPhone  String
+
+  cancelToken   String?           @unique
+  cancelTokenExpira DateTime?
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  specialist    Specialist        @relation(fields: [specialistId], references: [id])
+  slot          Slot              @relation(fields: [slotId], references: [id])
+  patient       Patient?          @relation(fields: [patientId], references: [id])
+
+  @@index([tenantId])
+  @@index([specialistId])
+  @@index([patientId])
+  @@index([status])
+}
+
+model Patient {
+  id                    String    @id @default(cuid())
+  tenantId              String
+  rut                   String?
+  name                  String
+  birthDate             DateTime?
+  email                 String?
+  phone                 String?
+  address               String?
+
+  alergias              String?
+  enfermedadesCronicas  String?
+  medicamentos          String?
+  antecedentesFamiliares String?
+  grupoSanguineo        String?
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  tenant                Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appointments          Appointment[]
+
+  @@index([tenantId])
+  @@index([tenantId, rut])
+}
+model SpecialistDay {
+  id            String    @id @default(cuid())
+  specialistId  String
+  date          DateTime
+  active        Boolean   @default(true)
+  startTime     String?
+  endTime       String?
+  breakStart    String?
+  breakEnd      String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  specialist    Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+
+  @@unique([specialistId, date])
+  @@index([specialistId])
+  @@index([date])
+}
