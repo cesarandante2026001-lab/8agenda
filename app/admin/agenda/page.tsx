@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic"
 const DIAS = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
 
 function inicioSemana(d: Date) {
-  const dia = d.getUTCDay() // 0=Dom
-  const diff = (dia === 0 ? -6 : 1 - dia)
+  const dia = d.getUTCDay()
+  const diff = dia === 0 ? -6 : 1 - dia
   const r = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
   r.setUTCDate(r.getUTCDate() + diff)
   return r
@@ -57,7 +57,6 @@ export default async function AgendaPage({
     select: { id: true, name: true },
   })
 
-  // Agrupar citas por especialista y dia
   const grilla: Record<string, Record<string, typeof citas>> = {}
   for (const esp of especialistas) {
     grilla[esp.id] = {}
@@ -74,7 +73,7 @@ export default async function AgendaPage({
 
   const semAnterior = fmtISO(addDias(lunes, -7))
   const semSiguiente = fmtISO(addDias(lunes, 7))
-  const titulo = `${lunes.getUTCDate()} ${DIAS[0]} - ${domingo.getUTCDate()} ${DIAS[6]}`
+  const titulo = `${lunes.getUTCDate()} ${DIAS[0]} al ${domingo.getUTCDate()} ${DIAS[6]}`
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -84,7 +83,7 @@ export default async function AgendaPage({
         </h1>
         <div className="flex gap-2">
           <Link
-            href="/admin/agenda/nueva"
+            href={`/admin/agenda/nueva${espId ? "?esp=" + espId : ""}`}
             className="bg-black text-white px-4 py-2 text-xs uppercase tracking-wider hover:bg-gray-800"
           >
             + Nueva cita
@@ -93,7 +92,7 @@ export default async function AgendaPage({
             href={`/admin/agenda?sem=${semAnterior}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Ãƒâ€šÃ‚Â Anterior
+            Anterior
           </Link>
           <Link
             href={`/admin/agenda${espId ? "?esp=" + espId : ""}`}
@@ -105,7 +104,7 @@ export default async function AgendaPage({
             href={`/admin/agenda?sem=${semSiguiente}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            Siguiente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢
+            Siguiente
           </Link>
         </div>
       </div>
@@ -182,7 +181,7 @@ export default async function AgendaPage({
                           </Link>
                         ))}
                         {lista.length === 0 && (
-                          <div className="text-[11px] text-gray-300">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</div>
+                          <div className="text-[11px] text-gray-300">-</div>
                         )}
                       </div>
                     </div>
