@@ -84,10 +84,16 @@ export default async function AgendaPage({
         </h1>
         <div className="flex gap-2">
           <Link
+            href="/admin/agenda/nueva"
+            className="bg-black text-white px-4 py-2 text-xs uppercase tracking-wider hover:bg-gray-800"
+          >
+            + Nueva cita
+          </Link>
+          <Link
             href={`/admin/agenda?sem=${semAnterior}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            Ã¢â€ Â Anterior
+            ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Anterior
           </Link>
           <Link
             href={`/admin/agenda${espId ? "?esp=" + espId : ""}`}
@@ -99,7 +105,7 @@ export default async function AgendaPage({
             href={`/admin/agenda?sem=${semSiguiente}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            Siguiente Ã¢â€ â€™
+            Siguiente ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
           </Link>
         </div>
       </div>
@@ -176,7 +182,7 @@ export default async function AgendaPage({
                           </Link>
                         ))}
                         {lista.length === 0 && (
-                          <div className="text-[11px] text-gray-300">Ã¢â‚¬â€</div>
+                          <div className="text-[11px] text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</div>
                         )}
                       </div>
                     </div>
