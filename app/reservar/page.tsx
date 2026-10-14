@@ -28,8 +28,7 @@ export default function ReservarPage() {
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState("")
   const [exito, setExito] = useState(false)
-  const [appointmentId, setAppointmentId] = useState("")
-  const [anulando, setAnulando] = useState(false)
+  const [cancelToken, setCancelToken] = useState("")
 
   useEffect(() => {
     fetch("/api/publico/especialistas")
@@ -51,7 +50,7 @@ export default function ReservarPage() {
     setDiaSeleccionado("")
   }, [especialidadId, especialistas])
 
-  function cargarDias() {
+  useEffect(() => {
     if (!especialistaId) { setDias([]); return }
     setCargandoDias(true)
     setDias([])
@@ -65,9 +64,7 @@ export default function ReservarPage() {
         if (data.dias?.length > 0) setDiaSeleccionado(data.dias[0].date)
         setCargandoDias(false)
       })
-  }
-
-  useEffect(() => { cargarDias() }, [especialistaId])
+  }, [especialistaId])
 
   async function reservar(e: React.FormEvent) {
     e.preventDefault()
@@ -80,7 +77,10 @@ export default function ReservarPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         slotId: slotSeleccionado.id,
-        patientName, patientRut: patientRut || undefined, patientEmail, patientPhone,
+        patientName,
+        patientRut: patientRut || undefined,
+        patientEmail,
+        patientPhone,
       }),
     })
     const data = await r.json()
@@ -88,24 +88,8 @@ export default function ReservarPage() {
 
     if (!r.ok) { setError(data.error || "Error al reservar"); return }
 
-    setAppointmentId(data.appointment.id)
+    setCancelToken(data.cancelToken || "")
     setExito(true)
-  }
-
-  async function anular() {
-    if (!confirm("Anular esta reserva?")) return
-    setAnulando(true)
-    const r = await fetch("/api/publico/anular", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ appointmentId }),
-    })
-    setAnulando(false)
-    if (!r.ok) { alert("Error al anular"); return }
-    alert("Reserva anulada")
-    setExito(false)
-    setSlotSeleccionado(null)
-    cargarDias()
   }
 
   const especialistasFiltrados = especialistas.filter((e) => e.specialtyId === especialidadId)
@@ -135,13 +119,14 @@ export default function ReservarPage() {
               weekday: "long", day: "numeric", month: "long", timeZone: "UTC",
             })} a las {slotSeleccionado?.startTime}
           </p>
-          <button
-            onClick={anular}
-            disabled={anulando}
-            className="text-xs text-red-600 hover:underline disabled:opacity-50"
-          >
-            {anulando ? "Anulando..." : "Anular esta reserva"}
-          </button>
+          {cancelToken && (
+            <a
+              href={"/anular/" + cancelToken}
+              className="inline-block text-xs text-red-600 hover:underline"
+            >
+              Anular esta reserva
+            </a>
+          )}
         </div>
       </main>
     )
@@ -149,7 +134,7 @@ export default function ReservarPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-6 py-12">
         <div className="mb-10">
           <p className="text-xs tracking-[0.3em] text-gray-500 mb-4 uppercase">Reserva tu hora</p>
           <h1 className="text-4xl font-light tracking-tight mb-2">Agenda tu consulta</h1>
@@ -157,31 +142,37 @@ export default function ReservarPage() {
         </div>
 
         <div className="border border-gray-200 rounded-lg p-6 mb-6">
-          <p className="text-xs tracking-widest uppercase text-gray-500 mb-3">1. Especialidad</p>
-          <div className="flex gap-2 flex-wrap">
+          <label className="block text-xs tracking-widest uppercase text-gray-500 mb-3">
+            1. Especialidad
+          </label>
+          <select
+            value={especialidadId}
+            onChange={(e) => setEspecialidadId(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:border-black outline-none bg-white text-sm"
+          >
             {especialidades.map((e) => (
-              <button key={e.id} onClick={() => setEspecialidadId(e.id)}
-                className={"border rounded-lg px-5 py-3 text-sm transition " + (especialidadId === e.id ? "border-black bg-black text-white" : "border-gray-200 hover:border-black")}>
-                {e.name}
-              </button>
+              <option key={e.id} value={e.id}>{e.name}</option>
             ))}
-          </div>
+          </select>
         </div>
 
         {especialidadId && (
           <div className="border border-gray-200 rounded-lg p-6 mb-6">
-            <p className="text-xs tracking-widest uppercase text-gray-500 mb-3">2. Especialista</p>
+            <label className="block text-xs tracking-widest uppercase text-gray-500 mb-3">
+              2. Especialista
+            </label>
             {especialistasFiltrados.length === 0 ? (
               <p className="text-sm text-gray-400">No hay especialistas activos en esta especialidad.</p>
             ) : (
-              <div className="flex gap-2 flex-wrap">
+              <select
+                value={especialistaId}
+                onChange={(e) => setEspecialistaId(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:border-black outline-none bg-white text-sm"
+              >
                 {especialistasFiltrados.map((e) => (
-                  <button key={e.id} onClick={() => setEspecialistaId(e.id)}
-                    className={"border rounded-lg px-5 py-3 text-sm transition " + (especialistaId === e.id ? "border-black bg-black text-white" : "border-gray-200 hover:border-black")}>
-                    {e.name}
-                  </button>
+                  <option key={e.id} value={e.id}>{e.name}</option>
                 ))}
-              </div>
+              </select>
             )}
           </div>
         )}
