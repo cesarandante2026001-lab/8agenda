@@ -78,15 +78,6 @@ export default async function AgendaPage({
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <div className="mb-6">
-        <Link
-          href="/admin"
-          className="text-xs tracking-widest uppercase text-gray-500 hover:text-black"
-        >
-          Volver al panel
-        </Link>
-      </div>
-
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-light">
           Semana <span className="font-semibold">{titulo}</span>
@@ -96,7 +87,7 @@ export default async function AgendaPage({
             href={`/admin/agenda?sem=${semAnterior}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            ← Anterior
+            â† Anterior
           </Link>
           <Link
             href={`/admin/agenda${espId ? "?esp=" + espId : ""}`}
@@ -108,7 +99,7 @@ export default async function AgendaPage({
             href={`/admin/agenda?sem=${semSiguiente}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            Siguiente →
+            Siguiente â†’
           </Link>
         </div>
       </div>
@@ -184,7 +175,7 @@ export default async function AgendaPage({
                           </div>
                         ))}
                         {lista.length === 0 && (
-                          <div className="text-[11px] text-gray-300">—</div>
+                          <div className="text-[11px] text-gray-300">â€”</div>
                         )}
                       </div>
                     </div>
