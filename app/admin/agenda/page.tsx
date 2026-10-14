@@ -93,7 +93,7 @@ export default async function AgendaPage({
             href={`/admin/agenda?sem=${semAnterior}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Anterior
+            ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Ãƒâ€šÃ‚Â Anterior
           </Link>
           <Link
             href={`/admin/agenda${espId ? "?esp=" + espId : ""}`}
@@ -105,7 +105,7 @@ export default async function AgendaPage({
             href={`/admin/agenda?sem=${semSiguiente}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            Siguiente ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+            Siguiente ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢
           </Link>
         </div>
       </div>
@@ -182,7 +182,7 @@ export default async function AgendaPage({
                           </Link>
                         ))}
                         {lista.length === 0 && (
-                          <div className="text-[11px] text-gray-300">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</div>
+                          <div className="text-[11px] text-gray-300">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</div>
                         )}
                       </div>
                     </div>
