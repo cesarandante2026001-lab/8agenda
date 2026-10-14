@@ -87,7 +87,7 @@ export default async function AgendaPage({
             href={`/admin/agenda?sem=${semAnterior}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            â† Anterior
+            Ã¢â€ Â Anterior
           </Link>
           <Link
             href={`/admin/agenda${espId ? "?esp=" + espId : ""}`}
@@ -99,7 +99,7 @@ export default async function AgendaPage({
             href={`/admin/agenda?sem=${semSiguiente}${espId ? "&esp=" + espId : ""}`}
             className="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black"
           >
-            Siguiente â†’
+            Siguiente Ã¢â€ â€™
           </Link>
         </div>
       </div>
@@ -165,17 +165,18 @@ export default async function AgendaPage({
                       </div>
                       <div className="space-y-1">
                         {lista.map((c) => (
-                          <div
+                          <Link
                             key={c.id}
-                            className="text-[11px] leading-tight border-l-2 border-black pl-2 py-1"
+                            href={`/admin/agenda/${c.id}`}
+                            className="block text-[11px] leading-tight border-l-2 border-black pl-2 py-1 hover:bg-gray-100 transition"
                             title={`${c.patientName} - ${c.patientPhone}`}
                           >
                             <div className="font-medium">{c.slot.startTime}</div>
                             <div className="text-gray-600 truncate">{c.patientName}</div>
-                          </div>
+                          </Link>
                         ))}
                         {lista.length === 0 && (
-                          <div className="text-[11px] text-gray-300">â€”</div>
+                          <div className="text-[11px] text-gray-300">Ã¢â‚¬â€</div>
                         )}
                       </div>
                     </div>
