@@ -72,3 +72,22 @@ export async function enviarCancelacionReserva(d: Omit<DatosReserva, "cancelToke
   `
   return enviar("Reserva anulada", html, d.to)
 }
+export async function enviarRecordatorio(d: Omit<DatosReserva, "cancelToken"> & { cancelToken?: string }) {
+  const linkAnular = d.cancelToken ? `${BASE_URL}/anular/${d.cancelToken}` : null
+  const html = `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px">
+      <h1 style="font-size:22px;margin:0 0 8px">Recordatorio de tu hora</h1>
+      <p style="color:#555;margin:0 0 24px">Hola ${d.pacienteNombre}, te recordamos tu reserva para manana.</p>
+      <div style="border:1px solid #e5e5e5;border-radius:8px;padding:20px;margin-bottom:24px">
+        <p style="margin:4px 0"><strong>Especialidad:</strong> ${d.especialidad}</p>
+        <p style="margin:4px 0"><strong>Especialista:</strong> ${d.especialista}</p>
+        <p style="margin:4px 0"><strong>Fecha:</strong> ${d.fecha}</p>
+        <p style="margin:4px 0"><strong>Hora:</strong> ${d.hora}</p>
+      </div>
+      ${linkAnular ? `<p style="color:#555;font-size:13px">Si no puedes asistir, anula tu reserva aqui:</p><p><a href="${linkAnular}" style="color:#000">${linkAnular}</a></p>` : ""}
+      <hr style="border:none;border-top:1px solid #eee;margin:32px 0">
+      <p style="color:#999;font-size:12px">8Agenda</p>
+    </div>
+  `
+  return enviar("Recordatorio: tu hora es manana", html, d.to)
+}
