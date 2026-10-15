@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 import { useEffect, useState } from "react"
 
 type Especialidad = { id: string; name: string; color: string | null }
@@ -119,14 +121,54 @@ export default function ReservarPage() {
               weekday: "long", day: "numeric", month: "long", timeZone: "UTC",
             })} a las {slotSeleccionado?.startTime}
           </p>
-          {cancelToken && (
-            <a
-              href={"/anular/" + cancelToken}
-              className="inline-block text-xs text-red-600 hover:underline"
-            >
-              Anular esta reserva
-            </a>
-          )}
+          <div className="space-y-4">
+            {cancelToken && (
+              <div className="border border-gray-200 rounded-lg p-4 text-left">
+                <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">
+                  Guarda este link por si necesitas anular
+                </p>
+                <div className="flex gap-2 items-center">
+                  <input
+                    readOnly
+                    value={typeof window !== "undefined" ? window.location.origin + "/anular/" + cancelToken : ""}
+                    className="flex-1 text-xs px-3 py-2 border border-gray-200 rounded bg-gray-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.origin + "/anular/" + cancelToken)
+                    }}
+                    className="text-xs uppercase tracking-wider px-3 py-2 border border-gray-300 rounded hover:border-black"
+                  >
+                    Copiar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 pt-4">
+              <Link
+                href="/reservar"
+                className="w-full bg-black text-white px-6 py-4 text-xs tracking-widest uppercase font-medium hover:bg-gray-800 transition text-center"
+              >
+                Reservar otra hora
+              </Link>
+              <Link
+                href="/"
+                className="w-full border border-gray-300 px-6 py-4 text-xs tracking-widest uppercase hover:border-black transition text-center"
+              >
+                Volver al inicio
+              </Link>
+              {cancelToken && (
+                <Link
+                  href={"/anular/" + cancelToken}
+                  className="text-xs text-red-600 hover:underline mt-2"
+                >
+                  Anular esta reserva
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </main>
     )
