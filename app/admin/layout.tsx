@@ -25,6 +25,9 @@ export default async function AdminLayout({
             <Link href="/" className="text-xs uppercase tracking-widest text-gray-500 hover:text-black">
               Ver sitio publico
             </Link>
+            <Link href="/cuenta/password" className="text-xs uppercase tracking-widest text-gray-500 hover:text-black">
+              Cambiar contrasena
+            </Link>
             <BotonCerrarSesion />
           </div>
         </div>

@@ -15,6 +15,7 @@ type Especialista = {
   anticipacionMinima: number
   anticipacionMaxima: number
   active: boolean
+  userId: string | null
 }
 
 type Especialidad = {
@@ -40,6 +41,18 @@ export default function EspecialistasClient({
   const [ok, setOk] = useState("")
   const [credenciales, setCredenciales] = useState<{ email: string; password: string } | null>(null)
   const [pending, start] = useTransition()
+
+  async function resetear(e: Especialista) {
+    if (!confirm(`Resetear contrasena de ${e.name}?`)) return
+    const r = await fetch(`/api/admin/usuarios/${e.userId}/reset-password`, { method: "POST" })
+    const data = await r.json()
+    if (!r.ok) {
+      setMsg(data.error || "No se pudo resetear")
+      return
+    }
+    setCredenciales(data.credenciales)
+    setOk("Contrasena reseteada. Entregar ahora.")
+  }
 
   async function recargar() {
     const r = await fetch("/api/admin/especialistas", { cache: "no-store" })
@@ -281,6 +294,14 @@ export default function EspecialistasClient({
                     >
                       Horarios
                     </Link>
+                    {e.userId && (
+                      <button
+                        onClick={() => resetear(e)}
+                        className="text-xs text-orange-600 hover:underline"
+                      >
+                        Resetear clave
+                      </button>
+                    )}
                     <button
                       onClick={() => eliminar(e)}
                       className="text-xs text-red-600 hover:underline"
