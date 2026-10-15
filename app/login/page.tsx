@@ -33,14 +33,10 @@ function LoginForm() {
       return
     }
 
-    // Si viene callbackUrl explicito, usarlo; si no, redirigir segun rol
-    if (params.get("callbackUrl")) {
-      router.push(callbackUrl)
-    } else {
-      const r = await fetch("/api/auth/redirect")
-      const data = await r.json()
-      router.push(data.url || "/")
-    }
+    // Redirigir: si viene callbackUrl explicito, ahi; si no, al home.
+    // El home (o /admin, o /especialista) saben redirigir segun el rol.
+    const destino = callbackUrl || "/"
+    router.push(destino)
     router.refresh()
   }
 
@@ -55,6 +51,7 @@ function LoginForm() {
             Volver al inicio
           </Link>
         </div>
+
         <div className="text-center mb-10">
           <h1 className="text-3xl font-light tracking-tight mb-2">Ingresar</h1>
           <p className="text-sm text-gray-500">Accede a tu cuenta</p>
