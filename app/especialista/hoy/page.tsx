@@ -66,7 +66,15 @@ export default async function HoyPage() {
                   {c.specialist.name} ({c.specialist.specialty.name})
                 </p>
               </div>
-              <BotonMarcar id={c.id} estado={c.status} />
+              <div className="flex flex-col items-end gap-2">
+                <a
+                  href={`/especialista/citas/${c.id}/atender`}
+                  className="text-xs uppercase tracking-wider bg-black text-white px-4 py-2 hover:bg-gray-800 transition"
+                >
+                  Atender
+                </a>
+                <BotonMarcar id={c.id} estado={c.status} />
+              </div>
             </div>
           ))}
         </div>

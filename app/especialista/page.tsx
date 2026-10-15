@@ -90,7 +90,13 @@ export default async function EspecialistaPage() {
                       {c.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right space-x-3">
+                    <a
+                      href={`/especialista/citas/${c.id}/atender`}
+                      className="text-xs uppercase tracking-wider text-black hover:underline"
+                    >
+                      Atender
+                    </a>
                     <BotonMarcar id={c.id} estado={c.status} />
                   </td>
                 </tr>

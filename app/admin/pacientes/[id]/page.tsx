@@ -25,6 +25,13 @@ export default async function FichaPacientePage({
   const paciente = await prisma.patient.findUnique({
     where: { id },
     include: {
+      atenciones: {
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        include: {
+          specialist: { include: { specialty: true } },
+        },
+      },
       appointments: {
         orderBy: { slot: { date: "desc" } },
         take: 20,
@@ -77,6 +84,47 @@ export default async function FichaPacientePage({
 
       <div className="mt-12">
         <h2 className="text-xl font-light mb-4">
+          Atenciones <span className="font-semibold">medicas</span>
+        </h2>
+        {paciente.atenciones.length === 0 ? (
+          <p className="text-sm text-gray-500">Sin atenciones registradas.</p>
+        ) : (
+          <div className="space-y-3">
+            {paciente.atenciones.map((a) => (
+              <details key={a.id} className="border border-gray-200 rounded-lg">
+                <summary className="cursor-pointer px-5 py-4 hover:bg-gray-50">
+                  <span className="font-medium">{formatearFecha(a.createdAt)}</span>
+                  <span className="text-sm text-gray-500 ml-3">{a.specialist.name}</span>
+                  {a.diagnostico && (
+                    <span className="text-sm text-gray-600 ml-3 truncate">
+                      - {a.diagnostico.slice(0, 80)}
+                    </span>
+                  )}
+                </summary>
+                <div className="px-5 py-4 border-t border-gray-100 space-y-3 text-sm">
+                  <VerCampo label="Motivo" valor={a.motivoConsulta} />
+                  <VerCampo label="Anamnesis" valor={a.anamnesis} />
+                  <VerCampo label="Examen fisico" valor={a.examenFisico} />
+                  <VerCampo label="Diagnostico" valor={a.diagnostico} />
+                  <VerCampo label="Indicaciones" valor={a.indicaciones} />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-gray-100">
+                    <VerCampo label="Peso" valor={a.peso} />
+                    <VerCampo label="Talla" valor={a.talla} />
+                    <VerCampo label="PA" valor={a.presionArterial} />
+                    <VerCampo label="FC" valor={a.frecuenciaCardiaca} />
+                    <VerCampo label="Temperatura" valor={a.temperatura} />
+                    <VerCampo label="SatO2" valor={a.saturacion} />
+                    <VerCampo label="FR" valor={a.frecuenciaResp} />
+                  </div>
+                </div>
+              </details>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-12">
+        <h2 className="text-xl font-light mb-4">
           Historial de <span className="font-semibold">citas</span>
         </h2>
         {paciente.appointments.length === 0 ? (
@@ -111,6 +159,15 @@ export default async function FichaPacientePage({
           </div>
         )}
       </div>
+    </div>
+  )
+}
+function VerCampo({ label, valor }: { label: string; valor: string | null }) {
+  if (!valor) return null
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wider text-gray-500 mb-0.5">{label}</p>
+      <p className="whitespace-pre-wrap">{valor}</p>
     </div>
   )
 }

@@ -83,6 +83,7 @@ model Tenant {
   specialists  Specialist[]
   appointments Appointment[]
   patients     Patient[]
+  atenciones   Atencion[]
 
   @@index([status])
 }
@@ -150,6 +151,7 @@ model Specialist {
   slots                Slot[]
   days                 SpecialistDay[]
   appointments         Appointment[]
+  atenciones           Atencion[]
 
   @@index([tenantId])
   @@index([specialtyId])
@@ -237,6 +239,7 @@ model Appointment {
   specialist    Specialist        @relation(fields: [specialistId], references: [id])
   slot          Slot              @relation(fields: [slotId], references: [id])
   patient       Patient?          @relation(fields: [patientId], references: [id])
+  atencion      Atencion?
 
   @@index([tenantId])
   @@index([specialistId])
@@ -270,6 +273,7 @@ model Patient {
 
   tenant                Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   appointments          Appointment[]
+  atenciones            Atencion[]
 
   @@index([tenantId])
   @@index([tenantId, rut])
@@ -291,4 +295,38 @@ model SpecialistDay {
   @@unique([specialistId, date])
   @@index([specialistId])
   @@index([date])
+}
+
+model Atencion {
+  id                  String    @id @default(cuid())
+  tenantId            String
+  appointmentId       String    @unique
+  patientId           String
+  specialistId        String
+
+  motivoConsulta      String?
+  anamnesis           String?
+  examenFisico        String?
+  diagnostico         String?
+  indicaciones        String?
+
+  peso                String?
+  talla               String?
+  presionArterial     String?
+  frecuenciaCardiaca  String?
+  temperatura         String?
+  saturacion          String?
+  frecuenciaResp      String?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  tenant              Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appointment         Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient             Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  specialist          Specialist  @relation(fields: [specialistId], references: [id])
+
+  @@index([tenantId])
+  @@index([patientId])
+  @@index([specialistId])
 }
