@@ -28,7 +28,7 @@ export async function POST(
   })
   if (!cita) return NextResponse.json({ error: "Cita no encontrada" }, { status: 404 })
 
-  if (u.role === "SPECIALIST" && cita.specialist.email !== u.email) {
+  if (u.role === "SPECIALIST" && cita.specialist.userId !== u.id) {
     return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
   }
 

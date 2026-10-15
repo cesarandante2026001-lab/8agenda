@@ -12,19 +12,35 @@ function formatearFecha(fecha: Date) {
     day: "2-digit",
     month: "short",
     year: "numeric",
-    timeZone: "America/Santiago",
+    timeZone: "UTC",
   })
 }
 
-export default async function EspecialistaPage() {
+export default async function EspecialistaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ver?: string }>
+}) {
   const u = await currentUser()
   if (!u) redirect("/login?callbackUrl=/especialista")
 
+  const sp = await searchParams
+  const ver = sp.ver || "todas"
+
   const esAdmin = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"].includes(u.role)
 
-  let where: any = { status: { in: ["RESERVADA", "CONFIRMADA", "EN_SALA"] } }
+  let where: any = {}
+  if (ver === "activas") {
+    where.status = { in: ["RESERVADA", "CONFIRMADA", "EN_SALA"] }
+  } else if (ver === "atendidas") {
+    where.status = "ATENDIDA"
+  } else if (ver === "no_show") {
+    where.status = "NO_SHOW"
+  } else if (ver === "todas") {
+    where.status = { in: ["RESERVADA", "CONFIRMADA", "EN_SALA", "ATENDIDA", "NO_SHOW"] }
+  }
+
   if (!esAdmin) {
-    // Doctor: solo sus citas, vinculando por userId
     const esp = await prisma.specialist.findFirst({ where: { userId: u.id } })
     if (!esp) {
       return (
@@ -40,24 +56,52 @@ export default async function EspecialistaPage() {
 
   const citas = await prisma.appointment.findMany({
     where,
-    orderBy: [{ slot: { date: "asc" } }, { slot: { startTime: "asc" } }],
+    orderBy: [{ slot: { date: "desc" } }, { slot: { startTime: "desc" } }],
     take: 200,
     include: {
       specialist: { include: { specialty: true } },
       slot: true,
+      atencion: true,
     },
   })
 
+  const filtros = [
+    { key: "todas", label: "Todas" },
+    { key: "activas", label: "Activas" },
+    { key: "atendidas", label: "Atendidas" },
+    { key: "no_show", label: "No-show" },
+  ]
+
   return (
     <div>
-      <h1 className="text-3xl font-light mb-2">Citas activas</h1>
-      <p className="text-sm text-gray-500 mb-8">
-        Todas las citas reservadas y confirmadas.
+      <h1 className="text-3xl font-light mb-2">Mis citas</h1>
+      <p className="text-sm text-gray-500 mb-6">
+        {esAdmin ? "Vista admin: muestra citas de todos los especialistas." : "Aqui ves tus citas."}
       </p>
+
+      <div className="flex flex-wrap gap-2 mb-6">
+        {filtros.map((f) => {
+          const activo = ver === f.key
+          return (
+            <Link
+              key={f.key}
+              href={`/especialista?ver=${f.key}`}
+              className={
+                "px-4 py-2 text-xs uppercase tracking-wider rounded border transition " +
+                (activo
+                  ? "bg-black text-white border-black"
+                  : "border-gray-300 text-gray-700 hover:border-black")
+              }
+            >
+              {f.label}
+            </Link>
+          )
+        })}
+      </div>
 
       {citas.length === 0 ? (
         <div className="border border-dashed border-gray-200 rounded-lg p-12 text-center">
-          <p className="text-sm text-gray-400">No hay citas activas.</p>
+          <p className="text-sm text-gray-400">No hay citas en este filtro.</p>
         </div>
       ) : (
         <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -73,34 +117,63 @@ export default async function EspecialistaPage() {
               </tr>
             </thead>
             <tbody>
-              {citas.map((c) => (
-                <tr key={c.id} className="border-t border-gray-100">
-                  <td className="px-4 py-3 whitespace-nowrap">{formatearFecha(c.slot.date)}</td>
-                  <td className="px-4 py-3">{c.slot.startTime}</td>
-                  <td className="px-4 py-3">
-                    <div>{c.patientName}</div>
-                    <div className="text-xs text-gray-500">{c.patientPhone}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div>{c.specialist.name}</div>
-                    <div className="text-xs text-gray-500">{c.specialist.specialty.name}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs uppercase tracking-wider text-gray-700">
-                      {c.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right space-x-3">
-                    <a
-                      href={`/especialista/citas/${c.id}/atender`}
-                      className="text-xs uppercase tracking-wider text-black hover:underline"
-                    >
-                      Atender
-                    </a>
-                    <BotonMarcar id={c.id} estado={c.status} />
-                  </td>
-                </tr>
-              ))}
+              {citas.map((c) => {
+                const atendida = c.status === "ATENDIDA"
+                const cancelada = c.status === "CANCELADA"
+                const noShow = c.status === "NO_SHOW"
+                const finalizada = atendida || cancelada || noShow
+
+                return (
+                  <tr
+                    key={c.id}
+                    className={
+                      "border-t border-gray-100 " +
+                      (atendida ? "bg-gray-50 text-gray-500" : "")
+                    }
+                  >
+                    <td className="px-4 py-3 whitespace-nowrap">{formatearFecha(c.slot.date)}</td>
+                    <td className="px-4 py-3">{c.slot.startTime}</td>
+                    <td className="px-4 py-3">
+                      <div>{c.patientName}</div>
+                      <div className="text-xs text-gray-500">{c.patientPhone}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>{c.specialist.name}</div>
+                      <div className="text-xs text-gray-500">{c.specialist.specialty.name}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={
+                          "text-xs uppercase tracking-wider " +
+                          (atendida ? "text-green-700" : noShow ? "text-orange-700" : "text-gray-700")
+                        }
+                      >
+                        {c.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right space-x-3">
+                      {finalizada ? (
+                        <a
+                          href={`/especialista/citas/${c.id}/atender`}
+                          className="text-xs uppercase tracking-wider text-blue-600 hover:underline"
+                        >
+                          {atendida ? "Ver atencion" : "Ver detalle"}
+                        </a>
+                      ) : (
+                        <>
+                          <a
+                            href={`/especialista/citas/${c.id}/atender`}
+                            className="text-xs uppercase tracking-wider text-black hover:underline"
+                          >
+                            Atender
+                          </a>
+                          <BotonMarcar id={c.id} estado={c.status} />
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

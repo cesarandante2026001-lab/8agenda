@@ -13,11 +13,18 @@ export default async function HoyPage() {
   const inicio = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate()))
   const fin = new Date(inicio.getTime() + 24 * 60 * 60 * 1000)
 
+  const esAdmin = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"].includes(u.role)
+  let whereHoy: any = {
+    status: { in: ["RESERVADA", "CONFIRMADA", "EN_SALA"] },
+    slot: { date: { gte: inicio, lt: fin } },
+  }
+  if (!esAdmin) {
+    const esp = await prisma.specialist.findFirst({ where: { userId: u.id } })
+    if (esp) whereHoy.specialistId = esp.id
+  }
+
   const citas = await prisma.appointment.findMany({
-    where: {
-      status: { in: ["RESERVADA", "CONFIRMADA"] },
-      slot: { date: { gte: inicio, lt: fin } },
-    },
+    where: whereHoy,
     orderBy: [{ slot: { startTime: "asc" } }],
     include: {
       specialist: { include: { specialty: true } },
