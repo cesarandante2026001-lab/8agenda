@@ -12,7 +12,12 @@ export default async function AdminLayout({
   children: React.ReactNode
 }) {
   const ok = await isAdmin()
-  if (!ok) redirect("/login?callbackUrl=/admin")
+  if (!ok) {
+    const { currentUser } = await import("@/lib/auth-helpers-extra")
+    const u = await currentUser()
+    if (u?.role === "SPECIALIST") redirect("/especialista")
+    redirect("/login?callbackUrl=/admin")
+  }
 
   return (
     <>

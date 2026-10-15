@@ -9,7 +9,7 @@ import { Suspense } from "react"
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const callbackUrl = params.get("callbackUrl") || "/admin"
+  const callbackUrl = params.get("callbackUrl") || ""
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -33,7 +33,14 @@ function LoginForm() {
       return
     }
 
-    router.push(callbackUrl)
+    // Si viene callbackUrl explicito, usarlo; si no, redirigir segun rol
+    if (params.get("callbackUrl")) {
+      router.push(callbackUrl)
+    } else {
+      const r = await fetch("/api/auth/redirect")
+      const data = await r.json()
+      router.push(data.url || "/")
+    }
     router.refresh()
   }
 
