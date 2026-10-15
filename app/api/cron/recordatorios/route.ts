@@ -47,7 +47,7 @@ export async function GET(req: Request) {
 
   for (const c of citas) {
     try {
-      await enviarRecordatorio({
+      const r: any = await enviarRecordatorio({
         to: c.patientEmail,
         pacienteNombre: c.patientName,
         especialista: c.specialist.name,
@@ -56,7 +56,9 @@ export async function GET(req: Request) {
         hora: c.slot.startTime,
         cancelToken: c.cancelToken || undefined,
       })
-      enviados++
+      if (r?.error) errores++
+      else if (r?.skipped) { /* no cuenta como enviado */ }
+      else enviados++
     } catch (e) {
       console.error("[cron recordatorios] error con cita", c.id, e)
       errores++
