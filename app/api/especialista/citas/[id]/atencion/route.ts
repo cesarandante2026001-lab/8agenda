@@ -3,6 +3,19 @@ import { z } from "zod"
 import { currentUser } from "@/lib/auth-helpers-extra"
 import { prisma } from "@/lib/prisma"
 
+const recetaSchema = z.object({
+  medicamento: z.string().min(1).max(200),
+  dosis: z.string().max(100).optional().or(z.literal("")),
+  frecuencia: z.string().max(100).optional().or(z.literal("")),
+  duracion: z.string().max(100).optional().or(z.literal("")),
+  indicaciones: z.string().max(500).optional().or(z.literal("")),
+})
+
+const examenSchema = z.object({
+  nombre: z.string().min(1).max(200),
+  notas: z.string().max(500).optional().or(z.literal("")),
+})
+
 const schema = z.object({
   motivoConsulta: z.string().max(2000).optional().or(z.literal("")),
   anamnesis: z.string().max(5000).optional().or(z.literal("")),
@@ -16,6 +29,8 @@ const schema = z.object({
   temperatura: z.string().max(20).optional().or(z.literal("")),
   saturacion: z.string().max(20).optional().or(z.literal("")),
   frecuenciaResp: z.string().max(20).optional().or(z.literal("")),
+  recetas: z.array(recetaSchema).max(50).optional(),
+  examenes: z.array(examenSchema).max(50).optional(),
 })
 
 export async function POST(
@@ -42,8 +57,7 @@ export async function POST(
     return NextResponse.json({ error: "La cita no esta ligada a un paciente" }, { status: 400 })
   }
 
-  // Doctor solo puede atender sus propias citas
-  if (u.role === "SPECIALIST" && cita.specialist.email !== u.email && cita.specialist.userId !== u.id) {
+  if (u.role === "SPECIALIST" && cita.specialist.userId !== u.id) {
     return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
   }
 
@@ -74,6 +88,35 @@ export async function POST(
         ...datos,
       },
     })
+
+    // Reemplazar recetas y examenes (borrar y crear)
+    await tx.receta.deleteMany({ where: { atencionId: a.id } })
+    await tx.solicitudExamen.deleteMany({ where: { atencionId: a.id } })
+
+    if (body.recetas && body.recetas.length > 0) {
+      await tx.receta.createMany({
+        data: body.recetas.map((r, i) => ({
+          atencionId: a.id,
+          medicamento: r.medicamento,
+          dosis: r.dosis || null,
+          frecuencia: r.frecuencia || null,
+          duracion: r.duracion || null,
+          indicaciones: r.indicaciones || null,
+          orden: i,
+        })),
+      })
+    }
+
+    if (body.examenes && body.examenes.length > 0) {
+      await tx.solicitudExamen.createMany({
+        data: body.examenes.map((e, i) => ({
+          atencionId: a.id,
+          nombre: e.nombre,
+          notas: e.notas || null,
+          orden: i,
+        })),
+      })
+    }
 
     await tx.appointment.update({
       where: { id },

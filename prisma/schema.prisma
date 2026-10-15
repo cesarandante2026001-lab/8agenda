@@ -325,8 +325,38 @@ model Atencion {
   appointment         Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   patient             Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
   specialist          Specialist  @relation(fields: [specialistId], references: [id])
+  recetas             Receta[]
+  examenes            SolicitudExamen[]
 
   @@index([tenantId])
   @@index([patientId])
   @@index([specialistId])
+}
+model Receta {
+  id              String    @id @default(cuid())
+  atencionId      String
+  medicamento     String
+  dosis           String?
+  frecuencia      String?
+  duracion        String?
+  indicaciones    String?
+  orden           Int       @default(0)
+  createdAt       DateTime  @default(now())
+
+  atencion        Atencion  @relation(fields: [atencionId], references: [id], onDelete: Cascade)
+
+  @@index([atencionId])
+}
+
+model SolicitudExamen {
+  id              String    @id @default(cuid())
+  atencionId      String
+  nombre          String
+  notas           String?
+  orden           Int       @default(0)
+  createdAt       DateTime  @default(now())
+
+  atencion        Atencion  @relation(fields: [atencionId], references: [id], onDelete: Cascade)
+
+  @@index([atencionId])
 }

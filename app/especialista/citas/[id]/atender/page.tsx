@@ -32,7 +32,12 @@ export default async function AtenderPage({
       specialist: { include: { specialty: true } },
       slot: true,
       patient: true,
-      atencion: true,
+      atencion: {
+        include: {
+          recetas: { orderBy: { orden: "asc" } },
+          examenes: { orderBy: { orden: "asc" } },
+        },
+      },
     },
   })
 
@@ -94,6 +99,17 @@ export default async function AtenderPage({
           saturacion: atencionExistente?.saturacion || "",
           frecuenciaResp: atencionExistente?.frecuenciaResp || "",
         }}
+        recetasIniciales={(atencionExistente?.recetas || []).map((r: any) => ({
+          medicamento: r.medicamento,
+          dosis: r.dosis || "",
+          frecuencia: r.frecuencia || "",
+          duracion: r.duracion || "",
+          indicaciones: r.indicaciones || "",
+        }))}
+        examenesIniciales={(atencionExistente?.examenes || []).map((e: any) => ({
+          nombre: e.nombre,
+          notas: e.notas || "",
+        }))}
         yaExistia={!!atencionExistente}
       />
     </div>
