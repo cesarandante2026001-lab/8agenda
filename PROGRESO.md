@@ -24,6 +24,8 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 - /especialista/hoy: solo citas del dia
 - Recordatorio 24h: endpoint /api/cron/recordatorios + vercel.json
 - Multi-tenant base: subdominios (demo.localhost) + /t/[slug]
+- Ficha del paciente expandida (campos medicos + lista + ficha editable + API)
+- Home publico con menu, /login y /register con boton Volver
 
 ### Pendientes inmediatos
 1. **Resend**: verificar dominio propio para enviar a cualquier correo
@@ -32,32 +34,100 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 2. **Multi-tenant fase 2**: filtrar datos por tenant
    - Hoy /t/[slug] muestra especialidades de TODOS los tenants
    - Hay que filtrar Specialty, Specialist, Slot, Appointment por tenantId
-3. **Deploy a Vercel**: subir, configurar env vars (cron ya esta en vercel.json)
+3. **Deploy a Vercel**
 
-### Pendientes grandes (fase clinica)
-4. **Ficha del paciente expandida**
-   - Campos: fecha nacimiento, direccion, prevision (Fonasa/Isapre),
-     contacto de emergencia, alergias, enfermedades cronicas,
-     medicamentos, antecedentes familiares, grupo sanguineo
-   - Vista en /admin/pacientes/[id]
-   - Vista resumida en /especialista cuando doctor clickea paciente
-5. **Atenciones / consultas**
-   - Nueva tabla Atencion ligada a Appointment y Patient
-   - Campos: motivo consulta, anamnesis, examen fisico, diagnostico,
-     indicaciones, signos vitales (PA, FC, T, peso, talla)
-   - Pantalla /especialista/citas/[id]/atender
-6. **Solicitudes de examenes**
-   - Tabla SolicitudExamen ligada a Atencion
-   - Doctor escribe examenes, sistema genera vista imprimible o PDF
-7. **Historial del paciente**
-   - /admin/pacientes/[id]/historial con atenciones, examenes, recetas
+---
 
-### Pendientes menores
-8. Editar/reprogramar reserva (hoy solo se puede anular y volver a reservar)
-9. Notificacion al especialista cuando entra una reserva nueva
-10. Bloqueos del especialista desde su propio panel (hoy solo admin)
-11. Dashboard con KPIs (citas del mes, tasa no-show, especialista top)
-12. Branding por tenant (logo, colores, tipografia)
+## ANALISIS DEL SISTEMA CLINICO (arquitectura pensada desde los 5 roles)
+
+### Rol 1 - Paciente
+- Reserva hora sin login -> OK hoy
+- Recibe email con confirmacion + link de anulacion -> OK hoy (falta dominio Resend)
+- Llega al consultorio -> la asistente lo marca como "llego" (check-in) -> FALTA
+- Despues de la consulta, ve que le recetaron -> FALTA (historial visible para paciente, fase 2)
+
+### Rol 2 - Asistente / Recepcionista (el rol con mas carga)
+- Ver la agenda del dia en formato calendario -> OK hoy (/admin/agenda)
+- Marcar llegada del paciente -> FALTA
+- Cobrar consulta / registrar pago -> FALTA
+- Reagendar citas -> FALTA
+- Llamar al paciente para recordatorio manual -> parcialmente (cron automatico)
+- Crear paciente nuevo (llega por primera vez sin reservar) -> FALTA
+- Ver lista de espera del dia -> FALTA
+
+### Rol 3 - Doctor
+- Ver SOLO sus citas del dia -> OK hoy pero muestra todas, falta filtrar por doctor
+- Click en una cita -> ver ficha del paciente (solo lectura) -> FALTA
+- Al terminar la consulta, escribir:
+  - Motivo de consulta
+  - Anamnesis
+  - Examen fisico
+  - Signos vitales (PA, FC, T, peso, talla, SatO2)
+  - Diagnostico
+  - Indicaciones / tratamiento
+  - Solicitud de examenes
+  - Receta
+- Guardar como "Atencion" ligada al paciente -> FALTA TODO ESTO
+- Historial del paciente (ver consultas anteriores) -> FALTA
+
+### Rol 4 - Admin / Dueno
+- Todo lo del asistente
+- Configurar especialidades, especialistas, horarios -> OK hoy
+- Ver KPIs: citas del mes, tasa no-show, ingresos, especialista top -> FALTA
+- Crear nuevos usuarios (asistentes, doctores) -> parcialmente (crear especialista NO crea usuario todavia)
+
+### Rol 5 - Junior / Programador
+- Necesita modelo de datos limpio
+- HOY Specialist NO esta vinculado a User -> hay que arreglarlo
+- HOY Patient solo existe si alguien reservo por web -> hay que permitir crearlo desde admin
+- HOY Appointment no tiene estado "en sala" ni "atendida" con hora real
+
+---
+
+## PROPUESTA DE EVOLUCION (5 bloques en orden)
+
+### Bloque 1 - Vincular Specialist con User
+- Agregar userId a Specialist (relacion 1-a-1 con User)
+- Al crear especialista desde /admin/especialistas:
+  - Crear User con rol SPECIALIST + email + contrasena temporal autogenerada
+  - El admin ve la contrasena una vez en pantalla y se la pasa al doctor
+- El doctor entra con su email -> cae a /especialista
+- Ve SOLO sus citas (filtrando por su userId)
+- Pantalla /especialista/perfil para editar sus datos
+- Admin/asistentes siguen viendo todas las citas
+
+### Bloque 2 - Flujo de agenda diaria (vista asistente)
+- Estados de cita ampliados:
+  RESERVADA -> CONFIRMADA (check-in) -> EN_SALA -> ATENDIDA / NO_SHOW
+- En /admin/agenda cada cita se puede marcar: confirmada, en sala, atendida, no-show
+- Vista del dia tipo "lista de espera" con orden por hora
+
+### Bloque 3 - Consulta medica (corazon clinico)
+- Nueva tabla Atencion ligada a Appointment + Patient + Specialist
+- Campos: motivo, anamnesis, examen fisico, diagnostico, indicaciones, signos vitales
+- Pantalla /especialista/citas/[id]/atender (el doctor la abre al terminar)
+- Al guardar, Appointment.status = ATENDIDA automaticamente
+
+### Bloque 4 - Recetas y solicitudes de examenes
+- Nueva tabla Receta (medicamento, dosis, frecuencia, duracion) ligada a Atencion
+- Nueva tabla SolicitudExamen (nombre, notas) ligada a Atencion
+- Vista imprimible /admin/atenciones/[id]/imprimir
+- Fase posterior: envio por email al paciente
+
+### Bloque 5 - Historial clinico del paciente
+- Vista /admin/pacientes/[id]/historial con timeline de atenciones
+- Cada atencion desplegable: motivo, diagnostico, receta, examenes
+- El doctor ve este historial desde su panel antes de atender
+
+---
+
+## DECISIONES PENDIENTES (antes de arrancar Bloque 1)
+
+- D1) El asistente puede crear pacientes desde /admin/pacientes/nuevo? (recomendado SI)
+- D2) Los estados nuevos de cita (CONFIRMADA, EN_SALA) se agregan ahora o despues? (recomendado AHORA)
+- D3) La contrasena temporal del doctor se muestra al admin en pantalla o se envia por email? (recomendado PANTALLA)
+
+---
 
 ## Modelo de datos actual
 - Tenant
@@ -67,7 +137,7 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 - Slot (LIBRE, TOMADO, BLOQUEADO)
 - Appointment (RESERVADA, CONFIRMADA, ATENDIDA, CANCELADA, NO_SHOW)
   - cancelToken (unico, expira 7 dias)
-- Patient (ficha basica + ficha medica en fase 2)
+- Patient (ficha basica + campos medicos expandidos 2026-10-15)
 - SpecialistDay
 
 ## Rutas
@@ -81,6 +151,8 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 - /admin/agenda                Vista semanal
 - /admin/agenda/nueva          Crear cita manual
 - /admin/agenda/[id]           Detalle de cita
+- /admin/pacientes             Lista con buscador
+- /admin/pacientes/[id]        Ficha editable
 - /especialista                Panel especialista
 - /especialista/hoy            Citas de hoy
 - /anular/[token]              Confirmar anulacion
@@ -95,6 +167,7 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 - /api/admin/citas/crear
 - /api/admin/citas/[id]/anular
 - /api/admin/slots-libres
+- /api/admin/pacientes/[id]   (PATCH)
 - /api/publico/especialistas
 - /api/publico/especialistas/[id]/disponibilidad
 - /api/publico/reservar
@@ -114,10 +187,12 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 9. Pacientes reservan como invitados (sin login obligatorio)
 10. Anulacion: opcion B (pagina de confirmacion, 2 clicks)
 11. cancelToken expira a los 7 dias
-12. Panel especialista: admin ve todas; login propio queda para despues
+12. Panel especialista: admin ve todas; login propio se agrega en Bloque 1
 13. Recordatorio 24h: Vercel Cron (12:00 UTC) + endpoint manual con secret
-14. Doctor NO reprograma: solicita bloqueo, admin/aprobador lo gestiona
-15. Asistente/recepcionista es quien maneja reprogramaciones y agenda
+14. Doctor NO reprograma: solicita bloqueo, admin/asistente lo gestiona
+15. Asistente/recepcionista maneja reprogramaciones y agenda
+16. Doctor tendra login propio (email = User), ve solo sus citas
+17. Contrasena temporal autogenerada que el admin entrega al doctor
 
 ## Notas tecnicas
 - Prisma 7.10.0 (NO usar Prisma 8)
@@ -133,7 +208,7 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 - Admin (registrado en Resend): cesarandante2026001@gmail.com
 - Paciente de prueba: ccousino@gmail.com
 - Especialista de prueba: carcou2017@gmail.com
-- Resend en plan gratuito SOLO envia al correo de registro (cesarandante2026001@gmail.com)
+- Resend en plan gratuito SOLO envia al correo de registro
 - Para enviar a otros: verificar dominio en resend.com/domains y cambiar FROM en lib/emails.ts
 
 ## Comandos utiles
@@ -145,10 +220,12 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 - node restaurar-correos.mjs
 - git add -A ; git commit -m "..." ; git push origin master
 
-## Proxima sesion: por donde empezar
-1. Arrancar con "Bloque A - Ficha del paciente expandida" (base para todo lo clinico)
-2. Luego Bloque B - Atenciones/consultas
-3. Luego Bloque C - Solicitudes de examenes
-4. Luego Bloque D - Historial del paciente
-5. Multi-tenant fase 2 (filtrar datos) cuando la fase clinica este andando
-6. Deploy a Vercel al final
+## Proxima sesion
+1. Confirmar D1, D2, D3
+2. Arrancar Bloque 1 (vincular Specialist con User + login del doctor)
+3. Seguir con Bloque 2 (estados de cita ampliados)
+4. Bloque 3 (Atencion medica) - el corazon clinico
+5. Bloque 4 (Recetas + examenes)
+6. Bloque 5 (Historial del paciente)
+7. Multi-tenant fase 2 cuando lo clinico este andando
+8. Deploy a Vercel al final
