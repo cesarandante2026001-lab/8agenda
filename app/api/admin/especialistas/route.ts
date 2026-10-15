@@ -12,7 +12,14 @@ function isAdminRole(role?: string): boolean {
 }
 
 function generarPassword(): string {
-  return randomBytes(6).toString("base64").replace(/[^a-zA-Z0-9]/g, "").slice(0, 10)
+  // Solo caracteres seguros (sin 0/O, 1/l/I para evitar confusiones)
+  const alfabeto = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789"
+  let pwd = ""
+  const bytes = randomBytes(10)
+  for (let i = 0; i < 10; i++) {
+    pwd += alfabeto[bytes[i] % alfabeto.length]
+  }
+  return pwd
 }
 
 export async function GET() {

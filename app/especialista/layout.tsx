@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { currentUser } from "@/lib/auth-helpers-extra"
+import { BotonCerrarSesion } from "@/components/BotonCerrarSesion"
 
 export const dynamic = "force-dynamic"
 
@@ -32,6 +33,7 @@ export default async function EspecialistaLayout({
             <Link href="/admin" className="text-gray-700 hover:text-black">
               Admin
             </Link>
+            <BotonCerrarSesion />
           </nav>
         </div>
       </header>
