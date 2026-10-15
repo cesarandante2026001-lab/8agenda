@@ -22,7 +22,11 @@ export default function AdminPage() {
       title: "Citas",
       desc: "Listar, filtrar y gestionar las reservas.",
     },
-  ]
+    {
+      href: "/admin/pacientes",
+      title: "Pacientes",
+      desc: "Fichas de pacientes con datos medicos.",
+    },  ]
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">

@@ -248,12 +248,17 @@ model Patient {
   email                 String?
   phone                 String?
   address               String?
+  city                  String?
+  prevision             String?
+  contactoEmergencia    String?
+  telefonoEmergencia    String?
 
   alergias              String?
   enfermedadesCronicas  String?
   medicamentos          String?
   antecedentesFamiliares String?
   grupoSanguineo        String?
+  observaciones         String?
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
