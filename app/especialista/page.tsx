@@ -20,8 +20,26 @@ export default async function EspecialistaPage() {
   const u = await currentUser()
   if (!u) redirect("/login?callbackUrl=/especialista")
 
+  const esAdmin = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"].includes(u.role)
+
+  let where: any = { status: { in: ["RESERVADA", "CONFIRMADA", "EN_SALA"] } }
+  if (!esAdmin) {
+    // Doctor: solo sus citas, vinculando por userId
+    const esp = await prisma.specialist.findFirst({ where: { userId: u.id } })
+    if (!esp) {
+      return (
+        <div className="border border-dashed border-gray-200 rounded-lg p-12 text-center">
+          <p className="text-sm text-gray-500">
+            Tu usuario no esta vinculado a ningun especialista. Contacta al administrador.
+          </p>
+        </div>
+      )
+    }
+    where.specialistId = esp.id
+  }
+
   const citas = await prisma.appointment.findMany({
-    where: { status: { in: ["RESERVADA", "CONFIRMADA"] } },
+    where,
     orderBy: [{ slot: { date: "asc" } }, { slot: { startTime: "asc" } }],
     take: 200,
     include: {

@@ -38,6 +38,7 @@ export default function EspecialistasClient({
   const [duracionConsulta, setDuracionConsulta] = useState(20)
   const [msg, setMsg] = useState("")
   const [ok, setOk] = useState("")
+  const [credenciales, setCredenciales] = useState<{ email: string; password: string } | null>(null)
   const [pending, start] = useTransition()
 
   async function recargar() {
@@ -63,14 +64,19 @@ export default function EspecialistasClient({
       }),
     })
     if (r.ok) {
+      const data = await r.json()
       setName("")
       setRut("")
       setEmail("")
       setPhone("")
       setOk("Especialista creado")
+      if (data.credenciales) {
+        setCredenciales(data.credenciales)
+      }
       await recargar()
     } else {
-      setMsg("Error al crear")
+      const data = await r.json().catch(() => ({}))
+      setMsg(data.error || "Error al crear")
     }
   }
 
@@ -116,6 +122,34 @@ export default function EspecialistasClient({
         {ok && (
           <div className="mb-4 text-sm text-green-700 border border-green-200 bg-green-50 px-3 py-2">
             {ok}
+          </div>
+        )}
+
+        {credenciales && (
+          <div className="mb-6 border-2 border-black bg-yellow-50 p-5">
+            <p className="text-xs tracking-widest uppercase text-gray-700 mb-3">
+              Credenciales del nuevo doctor (entregar ahora, no se vuelven a mostrar)
+            </p>
+            <div className="space-y-2 font-mono text-sm">
+              <p><span className="text-gray-500">Email:</span> <strong>{credenciales.email}</strong></p>
+              <p><span className="text-gray-500">Contrasena:</span> <strong>{credenciales.password}</strong></p>
+            </div>
+            <div className="mt-3 flex gap-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`Email: ${credenciales.email}\nContrasena: ${credenciales.password}`)
+                }}
+                className="text-xs uppercase tracking-widest border border-black px-4 py-2 hover:bg-black hover:text-white transition"
+              >
+                Copiar credenciales
+              </button>
+              <button
+                onClick={() => setCredenciales(null)}
+                className="text-xs uppercase tracking-widest text-gray-500 hover:text-black"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         )}
 

@@ -38,6 +38,7 @@ enum SlotStatus {
 enum AppointmentStatus {
   RESERVADA
   CONFIRMADA
+  EN_SALA
   ATENDIDA
   CANCELADA
   NO_SHOW
@@ -98,6 +99,7 @@ model User {
 
   tenant       Tenant?   @relation("TenantUsers", fields: [tenantId], references: [id], onDelete: Cascade)
   ownedTenants Tenant[]  @relation("TenantOwner")
+  specialist   Specialist? @relation("SpecialistUser")
 
   @@index([tenantId])
 }
@@ -136,6 +138,9 @@ model Specialist {
   active               Boolean      @default(true)
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
+
+  userId               String?      @unique
+  user                 User?        @relation("SpecialistUser", fields: [userId], references: [id])
 
   tenant               Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   specialty            Specialty      @relation(fields: [specialtyId], references: [id])
