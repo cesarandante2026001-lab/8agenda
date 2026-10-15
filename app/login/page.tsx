@@ -40,6 +40,14 @@ function LoginForm() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6 py-16 bg-white">
       <div className="w-full max-w-md">
+        <div className="mb-8">
+          <Link
+            href="/"
+            className="text-xs tracking-widest uppercase text-gray-500 hover:text-black"
+          >
+            Volver al inicio
+          </Link>
+        </div>
         <div className="text-center mb-10">
           <h1 className="text-3xl font-light tracking-tight mb-2">Ingresar</h1>
           <p className="text-sm text-gray-500">Accede a tu cuenta</p>
