@@ -1,5 +1,11 @@
+import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
-const prisma = new PrismaClient()
+import { PrismaPg } from "@prisma/adapter-pg"
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+})
+const prisma = new PrismaClient({ adapter })
 
 const slug = process.argv[2] || "demo"
 const name = process.argv[3] || "Clinica Demo"
@@ -18,5 +24,5 @@ const tenant = await prisma.tenant.upsert({
   },
 })
 
-console.log("Tenant listo:", tenant)
+console.log("Tenant listo:", tenant.slug, "-", tenant.name)
 await prisma.$disconnect()
