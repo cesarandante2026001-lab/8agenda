@@ -24,10 +24,14 @@ async function enviar(subject: string, html: string, to: string) {
   }
   try {
     const r = await resend.emails.send({ from: FROM, to, subject, html })
-    console.log("[emails] enviado:", subject, r)
+    if (r?.error) {
+      console.error("[emails] Resend rechazo:", subject, r.error.message)
+      return { error: true, detalle: r.error.message }
+    }
+    console.log("[emails] enviado:", subject, r?.data?.id)
     return r
-  } catch (e) {
-    console.error("[emails] error:", e)
+  } catch (e: any) {
+    console.error("[emails] exception:", e?.message || e)
     return { error: true }
   }
 }
