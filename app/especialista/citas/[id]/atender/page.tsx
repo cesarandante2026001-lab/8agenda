@@ -110,6 +110,17 @@ export default async function AtenderPage({
           nombre: e.nombre,
           notas: e.notas || "",
         }))}
+        recetasIniciales={(atencionExistente?.recetas || []).map((r: any) => ({
+          medicamento: r.medicamento,
+          dosis: r.dosis || "",
+          frecuencia: r.frecuencia || "",
+          duracion: r.duracion || "",
+          indicaciones: r.indicaciones || "",
+        }))}
+        examenesIniciales={(atencionExistente?.examenes || []).map((e: any) => ({
+          nombre: e.nombre,
+          notas: e.notas || "",
+        }))}
         yaExistia={!!atencionExistente}
       />
     </div>

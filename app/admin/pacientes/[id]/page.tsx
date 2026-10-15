@@ -149,6 +149,37 @@ export default async function FichaPacientePage({
                       </ul>
                     </div>
                   )}
+
+                  {a.recetas.length > 0 && (
+                    <div className="pt-3 border-t border-gray-100">
+                      <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Recetas</p>
+                      <div className="space-y-2">
+                        {a.recetas.map((r: any) => (
+                          <div key={r.id} className="border-l-2 border-blue-400 pl-3 py-1">
+                            <p className="font-medium">{r.medicamento}</p>
+                            <p className="text-xs text-gray-600">
+                              {[r.dosis, r.frecuencia, r.duracion].filter(Boolean).join(" - ")}
+                            </p>
+                            {r.indicaciones && <p className="text-xs text-gray-500 mt-1">{r.indicaciones}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {a.examenes.length > 0 && (
+                    <div className="pt-3 border-t border-gray-100">
+                      <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Examenes solicitados</p>
+                      <ul className="space-y-1">
+                        {a.examenes.map((x: any) => (
+                          <li key={x.id} className="border-l-2 border-orange-400 pl-3 py-1">
+                            <p className="font-medium text-sm">{x.nombre}</p>
+                            {x.notas && <p className="text-xs text-gray-500">{x.notas}</p>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </details>
             ))}
