@@ -147,25 +147,35 @@ export default function ReservarPage() {
             )}
 
             <div className="flex flex-col gap-3 pt-4">
-              <Link
-                href="/reservar"
+              <button
+                type="button"
+                onClick={() => {
+                  setExito(false)
+                  setCancelToken("")
+                  setSlotSeleccionado(null)
+                  setPatientName("")
+                  setPatientRut("")
+                  setPatientEmail("")
+                  setPatientPhone("")
+                  setError("")
+                }}
                 className="w-full bg-black text-white px-6 py-4 text-xs tracking-widest uppercase font-medium hover:bg-gray-800 transition text-center"
               >
                 Reservar otra hora
-              </Link>
-              <Link
+              </button>
+              <a
                 href="/"
-                className="w-full border border-gray-300 px-6 py-4 text-xs tracking-widest uppercase hover:border-black transition text-center"
+                className="w-full border border-gray-300 px-6 py-4 text-xs tracking-widest uppercase hover:border-black transition text-center block"
               >
                 Volver al inicio
-              </Link>
+              </a>
               {cancelToken && (
-                <Link
+                <a
                   href={"/anular/" + cancelToken}
-                  className="text-xs text-red-600 hover:underline mt-2"
+                  className="text-xs text-red-600 hover:underline mt-2 text-center"
                 >
                   Anular esta reserva
-                </Link>
+                </a>
               )}
             </div>
           </div>
