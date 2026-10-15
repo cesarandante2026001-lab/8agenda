@@ -27,6 +27,14 @@ export default async function HoyPage() {
 
   return (
     <div>
+      <div className="mb-4">
+        <a
+          href="/especialista"
+          className="text-xs tracking-widest uppercase text-gray-500 hover:text-black"
+        >
+          Volver a mis citas
+        </a>
+      </div>
       <h1 className="text-3xl font-light mb-2">Citas de hoy</h1>
       <p className="text-sm text-gray-500 mb-8">
         {new Date().toLocaleDateString("es-CL", {

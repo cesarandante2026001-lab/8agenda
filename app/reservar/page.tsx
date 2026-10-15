@@ -187,6 +187,15 @@ export default function ReservarPage() {
   return (
     <main className="min-h-screen bg-white">
       <div className="max-w-3xl mx-auto px-6 py-12">
+        <div className="mb-6">
+          <a
+            href="/"
+            className="text-xs tracking-widest uppercase text-gray-500 hover:text-black"
+          >
+            Volver al inicio
+          </a>
+        </div>
+
         <div className="mb-10">
           <p className="text-xs tracking-[0.3em] text-gray-500 mb-4 uppercase">Reserva tu hora</p>
           <h1 className="text-4xl font-light tracking-tight mb-2">Agenda tu consulta</h1>
