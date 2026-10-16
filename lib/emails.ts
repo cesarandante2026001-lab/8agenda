@@ -95,3 +95,89 @@ export async function enviarRecordatorio(d: Omit<DatosReserva, "cancelToken"> & 
   `
   return enviar("Recordatorio: tu hora es manana", html, d.to)
 }
+type DatosAtencion = {
+  to: string
+  pacienteNombre: string
+  institucion: string
+  especialista: string
+  especialidad: string
+  fecha: string
+  hora: string
+  motivoConsulta?: string | null
+  diagnostico?: string | null
+  indicaciones?: string | null
+  recetas: { medicamento: string; dosis?: string | null; frecuencia?: string | null; duracion?: string | null; indicaciones?: string | null }[]
+  examenes: { nombre: string; notas?: string | null }[]
+}
+
+export async function enviarAtencionPorEmail(d: DatosAtencion) {
+  const recetasHtml = d.recetas.length > 0
+    ? `
+      <h2 style="font-size:14px;margin:24px 0 8px;text-transform:uppercase;letter-spacing:1px;color:#666">Receta</h2>
+      <ol style="padding-left:20px;margin:0">
+        ${d.recetas.map((r) => `
+          <li style="margin-bottom:10px">
+            <strong>${r.medicamento}</strong><br>
+            <span style="color:#555;font-size:13px">${[r.dosis, r.frecuencia, r.duracion].filter(Boolean).join(" - ")}</span>
+            ${r.indicaciones ? `<br><em style="color:#666;font-size:13px">${r.indicaciones}</em>` : ""}
+          </li>
+        `).join("")}
+      </ol>
+    `
+    : ""
+
+  const examenesHtml = d.examenes.length > 0
+    ? `
+      <h2 style="font-size:14px;margin:24px 0 8px;text-transform:uppercase;letter-spacing:1px;color:#666">Examenes solicitados</h2>
+      <ol style="padding-left:20px;margin:0">
+        ${d.examenes.map((x) => `
+          <li style="margin-bottom:8px">
+            <strong>${x.nombre}</strong>
+            ${x.notas ? `<br><em style="color:#666;font-size:13px">${x.notas}</em>` : ""}
+          </li>
+        `).join("")}
+      </ol>
+    `
+    : ""
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;color:#222">
+      <div style="border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:24px">
+        <h1 style="font-size:20px;margin:0">${d.institucion}</h1>
+        <p style="color:#666;font-size:12px;margin:6px 0 0;text-transform:uppercase;letter-spacing:1px">Resumen de atencion medica</p>
+      </div>
+
+      <p style="color:#555;margin:0 0 20px">Hola ${d.pacienteNombre}, este es el resumen de tu atencion.</p>
+
+      <table style="width:100%;font-size:14px;border-collapse:collapse;margin-bottom:24px">
+        <tr><td style="padding:4px 0;color:#666;width:130px">Fecha:</td><td>${d.fecha}</td></tr>
+        <tr><td style="padding:4px 0;color:#666">Hora:</td><td>${d.hora}</td></tr>
+        <tr><td style="padding:4px 0;color:#666">Profesional:</td><td>${d.especialista}</td></tr>
+        <tr><td style="padding:4px 0;color:#666">Especialidad:</td><td>${d.especialidad}</td></tr>
+      </table>
+
+      ${d.motivoConsulta ? `
+        <h2 style="font-size:14px;margin:24px 0 8px;text-transform:uppercase;letter-spacing:1px;color:#666">Motivo de consulta</h2>
+        <p style="margin:0;white-space:pre-wrap">${d.motivoConsulta}</p>
+      ` : ""}
+
+      ${d.diagnostico ? `
+        <h2 style="font-size:14px;margin:24px 0 8px;text-transform:uppercase;letter-spacing:1px;color:#666">Diagnostico</h2>
+        <p style="margin:0;white-space:pre-wrap;font-weight:500">${d.diagnostico}</p>
+      ` : ""}
+
+      ${d.indicaciones ? `
+        <h2 style="font-size:14px;margin:24px 0 8px;text-transform:uppercase;letter-spacing:1px;color:#666">Indicaciones</h2>
+        <p style="margin:0;white-space:pre-wrap">${d.indicaciones}</p>
+      ` : ""}
+
+      ${recetasHtml}
+      ${examenesHtml}
+
+      <hr style="border:none;border-top:1px solid #eee;margin:32px 0">
+      <p style="color:#999;font-size:12px;text-align:center">${d.institucion}</p>
+    </div>
+  `
+
+  return enviar(`Resumen de tu atencion - ${d.institucion}`, html, d.to)
+}

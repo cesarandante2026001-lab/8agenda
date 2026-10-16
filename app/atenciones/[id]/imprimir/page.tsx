@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import BotonImprimir from "./BotonImprimir"
+import BotonEnviar from "./BotonEnviar"
 
 export const dynamic = "force-dynamic"
 
@@ -60,7 +61,15 @@ export default async function ImprimirAtencionPage({
           >
             Volver a la ficha
           </Link>
-          <BotonImprimir />
+          <div className="flex items-center gap-3">
+            <BotonImprimir />
+            {atencion.patient.email && (
+              <BotonEnviar
+                atencionId={atencion.id}
+                email={atencion.patient.email}
+              />
+            )}
+          </div>
         </div>
 
         {/* Encabezado */}
