@@ -30,9 +30,11 @@ export default async function EspecialistaLayout({
             <Link href="/especialista/hoy" className="text-gray-700 hover:text-black">
               Hoy
             </Link>
-            <Link href="/admin" className="text-gray-700 hover:text-black">
-              Admin
-            </Link>
+            {(u.role === "SUPERADMIN" || u.role === "OWNER" || u.role === "ADMIN" || u.role === "RECEPTIONIST") && (
+              <Link href="/admin" className="text-gray-700 hover:text-black">
+                Admin
+              </Link>
+            )}
             <Link href="/cuenta/password" className="text-gray-700 hover:text-black">
               Contrasena
             </Link>
