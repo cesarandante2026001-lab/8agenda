@@ -1,54 +1,120 @@
-# CONTEXTO 8AGENDA - Como trabajamos
+# 8AGENDA - CONTEXTO Y REGLAS PARA EL ASISTENTE
+# (Pegar este archivo al INICIO de cada conversacion)
 
-## Rol del asistente
-Eres arquitecto de sistemas y programador senior. Piensas como dueno de producto,
-como paciente, como doctor, como asistente y como junior antes de escribir codigo.
-No adivinas. Antes de tocar un archivo, lees su estado actual. No repites preguntas
-ya contestadas. No explicas de mas. Cuando algo esta mal, lo corriges de raiz, no con
-parches.
+===============================================================================
+  SECCION 1: COMO TRABAJAMOS (reglas no negociables)
+===============================================================================
 
-## Idioma
-Espanol neutro latino, sin acento regional. Nada de "weon", "po", "cachai", "de una",
-"altiro", "al tiro", "bacán", "fome", "pulento", "la raja". Directo, profesional, claro.
+## Regla 1: Diagnostico antes de tocar
+NUNCA escribir codigo nuevo sin antes ver el estado real del archivo afectado.
+Antes de modificar algo, pedir SIEMPRE el Get-Content del archivo.
+No asumir el contenido. No improvisar.
 
-## Como se ejecuta el trabajo
-- Cada bloque de cambios viene como UN script PowerShell unico que crea o modifica
-  todos los archivos necesarios y hace el commit + push al final.
-- El usuario ejecuta el bloque completo en una sola pegada. NO se le pide que haga
-  tareas manuales paso a paso (salvo cuando es inevitable: por ejemplo, escribir
-  el CRON_SECRET o pegar una API key).
-- El usuario NO pega contenidos de archivos uno por uno si el asistente puede
-  obtenerlos con un comando. Pero el asistente no tiene acceso a la maquina, asi
-  que cuando necesita ver un archivo, pide UN comando que lo muestre entero.
-- Antes de escribir codigo nuevo sobre un archivo existente, el asistente pide ver
-  su contenido actual con Get-Content. No asume.
+## Regla 2: Un cambio a la vez, verificado
+NO lanzar bloques gigantes de 40 archivos de una.
+Hacer cambios en bloques chicos. Ejecutar. Verificar que funciona.
+Recien ahi pasar al siguiente bloque.
 
-## Reglas de PowerShell aprendidas
-- NO usar $home como nombre de variable (es reservada por Windows, apunta a
-  C:\Users\<usuario>). Usar $paginaInicio, $contenidoHome, etc.
-- Escribir archivos con [System.IO.File]::WriteAllText($ruta, $contenido,
-  [System.Text.UTF8Encoding]::new($false)) para evitar BOM y caracteres raros.
-- No usar caracteres unicode especiales (flechas, guiones largos) porque se corrompen
-  al pasar por PowerShell. Usar solo ASCII.
-- Los scripts .mjs standalone (no Next.js) requieren driver adapter de Prisma.
+## Regla 3: Multi-tenant PRIMERO siempre
+En cualquier feature nueva, el filtro por tenantId va desde el minuto cero.
+Nunca "primero la feature, despues adaptamos a multi-tenant".
+Esta regla ya nos costo 2 dias de retrabajo. No se rompe mas.
 
-## Arquitectura del proyecto
+## Regla 4: No inventar comandos
+Antes de decir "ejecuta X", verificar que X existe.
+Si no se esta seguro, primero listar archivos con Get-ChildItem.
+No usar caracteres unicode (flechas, comillas curvas) que se rompen en PowerShell.
+
+## Regla 5: No usar variables reservadas de PowerShell
+- $home (apunta a C:\Users\<user>)
+- $host
+- $profile
+- $error
+Usar nombres propios: $paginaInicio, $contenidoHome, etc.
+
+## Regla 6: Auth no se toca sin plan
+El modulo de autenticacion (lib/auth.ts, app/login) es critico.
+Antes de modificarlo, hacer diagnostico completo:
+  - Get-Content de lib/auth.ts
+  - Verificar que los usuarios existan en la BD
+  - Verificar que las contrasenas matcheen (script de prueba)
+  - Verificar el callback de jwt y session
+Si algo falla, probar UNA hipotesis por vez. No cambiar 5 cosas juntas.
+
+## Regla 7: Cuando algo se rompe, volver atras
+Si un cambio rompe algo que funcionaba, la primera accion es REVERTIR.
+No intentar arreglar arriba de un cambio roto.
+git log para ver el ultimo commit bueno y volver a ese estado.
+
+## Regla 8: Idioma
+Espanol neutro. Sin modismos chilenos (weon, po, cachai, altiro).
+Directo. Sin explicaciones de mas.
+
+## Regla 9: Verificar antes de decir "listo"
+Antes de decir "listo, ya esta", pedir confirmacion visual:
+  - Captura de pantalla
+  - Salida de consola
+  - Resultado del navegador
+No declarar victoria sin prueba.
+
+## Regla 10: Si no se entiende, preguntar
+Mejor preguntar "esto es lo que entendi, es correcto?"
+que asumir mal y hacer perder tiempo.
+
+===============================================================================
+  SECCION 2: STACK Y ARQUITECTURA
+===============================================================================
+
+## Stack
 - Next.js 16 App Router + Turbopack
-- Prisma 7.10.0 + PostgreSQL Neon (NO Prisma 8: rompe la estructura)
-- Despues de cada npx prisma db push hay que correr npx prisma generate
-  (db push NO regenera el cliente)
-- NextAuth v5 con credentials, JWT, roles en el token
-- Multi-tenant: cada institucion = 1 tenant. Subdominio -> /t/[slug]
-- Rutas admin: /admin/*
-- Rutas doctor: /especialista/*
-- Rutas publicas: /, /reservar, /anular/[token]
-- Emails con Resend (lib/emails.ts)
-- Cron: /api/cron/recordatorios con CRON_SECRET en .env
+- TypeScript
+- Prisma 7.10.0 (NO SUBIR a Prisma 8: rompe todo)
+- PostgreSQL en Neon
+- NextAuth v5 (credentials + JWT)
+- Tailwind CSS
+- Resend (emails)
+- Vercel (futuro deploy)
+
+## Estructura de carpetas
+C:\proyectos\8agenda\
+  app\
+    admin\           panel administracion
+    especialista\    panel doctor
+    reservar\        vista publica
+    anular\[token]\  anulacion por email
+    t\[slug]\        home del tenant (subdominio)
+    api\
+      admin\         endpoints admin (filtran por tenant)
+      publico\       endpoints publicos
+      especialista\  endpoints del doctor
+      cron\          tareas programadas
+      auth\          NextAuth
+    login\
+    register\
+    cuenta\password\
+  lib\
+    auth.ts             configuracion NextAuth
+    auth-helpers.ts     helpers admin
+    auth-helpers-extra.ts  currentUser con tenantId
+    tenant.ts           getUsuario, withTenant, etc
+    prisma.ts           singleton
+    emails.ts           envio con Resend
+    generar-slots.ts    logica de slots
+  prisma\
+    schema.prisma       modelo de datos
+  middleware.ts         detecta subdominio y reescribe
+  types\next-auth.d.ts  tipado de session
 
 ## Modelo de datos (jerarquia)
-Tenant -> Specialty -> Specialist (con userId -> User)
-Specialist -> Slot -> Appointment -> Atencion -> Receta / SolicitudExamen
-Patient (independiente, ligado por Appointment.patientId)
+Tenant (institucion)
+  -> Specialty (especialidad)
+    -> Specialist (doctor) + User vinculado por userId
+      -> Slot (hora disponible) -> Appointment (reserva)
+        -> Atencion (consulta medica)
+          -> Receta
+          -> SolicitudExamen
+  -> Patient (paciente)
+  -> User (todos los usuarios del tenant)
 
 ## Estados de cita
 RESERVADA -> CONFIRMADA -> EN_SALA -> ATENDIDA
@@ -56,35 +122,119 @@ RESERVADA -> CONFIRMADA -> EN_SALA -> ATENDIDA
                                    -> CANCELADA
 
 ## Roles
-- SUPERADMIN: todo, multi-tenant
-- OWNER: dueno de la institucion
-- ADMIN: administrador
-- RECEPTIONIST: asistente / secretaria
-- SPECIALIST: doctor (ve solo sus citas)
-- PATIENT: paciente (futuro)
+SUPERADMIN    ve todo (multi-tenant)
+OWNER         dueno de la institucion
+ADMIN         administrador de la institucion
+RECEPTIONIST  asistente / secretaria
+SPECIALIST    doctor (ve solo sus citas)
+PATIENT       paciente (futuro)
 
-## Reglas de negocio clave
-- El doctor NO reprograma. Solicita bloqueo, admin/asistente gestiona.
-- Al marcar ATENDIDA la cita NO desaparece del listado: queda en gris con "Ver atencion".
-- Paciente reserva sin login. Recibe email con cancelToken para anular (expira 7 dias).
-- Al crear un Specialist desde /admin se crea tambien su User (rol SPECIALIST,
-  contrasena temporal). El admin ve la contrasena UNA VEZ y la entrega.
-- Resend en cuenta gratuita solo envia al correo de registro del dueno de la cuenta.
-  Cuando se verifique dominio propio, cambiar FROM en lib/emails.ts.
+## Multi-tenant (como funciona)
+- Cada usuario pertenece a un tenantId (excepto SUPERADMIN)
+- withTenant(u) devuelve {} para SUPERADMIN, {tenantId: "xxx"} para el resto
+- Todas las queries de admin usan withTenant
+- Vista publica: tenant se determina por subdominio o por /t/[slug]
+- La institucion se crea desde 8qlick via POST /api/publico/crear-tenant
 
-## Como pedir cosas
-- El usuario pide cambios en lenguaje natural, sin detallar la implementacion.
-- El asistente decide la implementacion. Si hay varias opciones validas, propone
-  con una recomendacion clara y avanza salvo que el usuario diga lo contrario.
-- Cuando el usuario dice "dale", "vamos", "ok", significa que aprueba y hay que
-  avanzar sin mas preguntas.
+===============================================================================
+  SECCION 3: ESTADO ACTUAL
+===============================================================================
 
-## Nunca hacer
-- No decir "yo no puedo" cuando se refiere a algo que el asistente puede resolver
-  con un script que el usuario ejecuta.
-- No pedirle al usuario que haga tareas manuales repetitivas.
-- No responder con informacion ya dicha.
-- No inventar datos. Si no sabes algo, pides verificarlo con un comando.
-- No usar caracteres especiales que se rompan en PowerShell.
-- No llamar "che" ni "boludo" ni "weon" ni nada regional.
-- No decir "vos" (usar "tu" o "usted").
+## Funciona
+- Multi-tenant completo (filtrado por tenantId en todas las APIs admin)
+- Vista publica /reservar con dropdowns escalables
+- Anulacion de reservas por token
+- Cron recordatorio 24h
+- Panel admin completo (especialidades, especialistas, agenda, citas,
+  pacientes, atenciones, usuarios)
+- Panel doctor (filtra sus citas, marcar atendida/no-show)
+- Formulario clinico con recetas y examenes
+- Vista imprimible de atencion
+- Endpoint crear-tenant para 8qlick
+
+## Roto / pendiente (PRIORIDAD 1)
+- LOGIN NO FUNCIONA: el usuario y contrasena existen y son validos,
+  pero NextAuth no crea la sesion. SignIn devuelve error silencioso.
+  El cliente redirige a /admin, /admin no ve sesion, redirige a /login,
+  loop infinito.
+  Ultimo intento: login con server action + redirectTo /ir.
+  /ir fue borrada por error, hay que recrearla.
+
+## Roto / pendiente (PRIORIDAD 2)
+- Boton "Generar slots" no muestra progreso
+- "Ver sitio publico" en admin apunta mal
+- "Volver al inicio" en login/register puede generar loop
+
+## Pendiente grande
+- Integracion con 8qlick (agregar 8Agenda como DISPONIBLE con boton Ver demo)
+- Deploy a Vercel
+- Dashboard KPIs
+- Branding por tenant
+
+===============================================================================
+  SECCION 4: DATOS DE PRUEBA
+===============================================================================
+
+## Tenants
+- clinica-norte       (Clinica Norte)
+- centro-medico-sur   (Centro Medico Sur)
+- clinica-prueba      (Clinica de Prueba)
+- principal           (Institucion Principal - datos viejos)
+
+## Usuarios (password: 12345678)
+- cesarandante2026001@gmail.com   OWNER de Clinica de Prueba + admin global
+- asistente.norte@8agenda.cl      RECEPTIONIST de Clinica Norte
+- asistente.sur@8agenda.cl        RECEPTIONIST de Centro Medico Sur
+- paciente.demo@8agenda.cl        PATIENT (no se usa para login)
+
+## Correos (Resend)
+- Registro Resend: cesarandante2026001@gmail.com
+- Plan gratuito: solo envia a ese correo
+- Para enviar a otros: verificar dominio en resend.com/domains
+
+===============================================================================
+  SECCION 5: COMANDOS Y CONVENCIONES
+===============================================================================
+
+## Comandos utiles
+- npm run dev                              arranca server
+- npx prisma studio                        ver la BD
+- npx prisma db push                       aplicar schema
+- npx prisma generate                      regenerar cliente (despues de db push)
+- git add -A ; git commit -m "..." ; git push origin master
+- Ctrl+C en terminal para matar server
+
+## Como se escriben los archivos (para evitar BOM)
+[System.IO.File]::WriteAllText("$PWD\ruta\archivo.tsx", $contenido, [System.Text.UTF8Encoding]::new($false))
+
+## Si el server queda colgado
+Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+Remove-Item -Recurse -Force ".next" -ErrorAction SilentlyContinue
+npm run dev
+
+## Git
+- Branch: master
+- Remote: https://github.com/cesarandante2026001-lab/8agenda.git
+- .env NO esta en el repo (esta en .gitignore)
+
+===============================================================================
+  SECCION 6: COMO REPORTAR UN BUG O PEDIR UN CAMBIO
+===============================================================================
+
+Formato que funciona:
+1. Que estabas haciendo (ej: "estaba creando un especialista")
+2. Que esperabas (ej: "deberia aparecer en la lista")
+3. Que paso (ej: "dice Error al crear")
+4. Captura o texto del error
+
+Con eso el asistente diagnostica sin adivinar.
+
+===============================================================================
+  SECCION 7: PROXIMO PASO
+===============================================================================
+
+Cuando se retome el trabajo, empezar por:
+1. Arreglar el login (unica cosa rota critica)
+2. Recien despues el resto
+
+===============================================================================
