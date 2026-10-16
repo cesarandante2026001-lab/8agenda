@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import Link from "next/link"
 import { Suspense } from "react"
 
 function LoginForm() {
-  const router = useRouter()
   const params = useSearchParams()
   const callbackUrl = params.get("callbackUrl") || ""
 
@@ -21,10 +20,12 @@ function LoginForm() {
     setError("")
     setLoading(true)
 
+    // Si viene callbackUrl, usarlo. Si no, dejar que el redirect del server decida.
     const res = await signIn("credentials", {
       email,
       password,
       redirect: false,
+      callbackUrl: callbackUrl || undefined,
     })
 
     if (res?.error) {
@@ -33,11 +34,10 @@ function LoginForm() {
       return
     }
 
-    // Redirigir: si viene callbackUrl explicito, ahi; si no, al home.
-    // El home (o /admin, o /especialista) saben redirigir segun el rol.
-    const destino = callbackUrl || "/"
-    router.push(destino)
-    router.refresh()
+    // Redirigir con window.location (no router.push) para forzar recarga completa
+    // y que la cookie de sesion este disponible en el proximo render
+    const destino = callbackUrl || res?.url || "/ir"
+    window.location.href = destino
   }
 
   return (
