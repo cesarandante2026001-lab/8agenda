@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-// Dominios base que NO son tenants (raiz, www, admin, etc.)
 const BASE_DOMAINS = ["localhost", "8agenda.cl", "8agenda.vercel.app"]
 const IGNORAR_SUBDOMINIOS = ["www", "app", "admin", "api"]
 
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host") || ""
   const hostSinPuerto = host.split(":")[0]
-
-  // Ej: "clinica1.localhost" -> ["clinica1", "localhost"]
-  // Ej: "clinica1.8agenda.cl" -> ["clinica1", "8agenda", "cl"]
   const partes = hostSinPuerto.split(".")
 
   let tenantSlug: string | null = null
@@ -26,23 +22,23 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  const res = NextResponse.next()
-
   if (tenantSlug) {
-    res.headers.set("x-tenant-slug", tenantSlug)
-    // Reescribe / a /t/[slug] para servir la home del tenant
+    // Reescribe / a /t/[slug] e inyecta x-tenant-slug en los headers
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set("x-tenant-slug", tenantSlug)
+
     if (req.nextUrl.pathname === "/") {
       const url = req.nextUrl.clone()
       url.pathname = `/t/${tenantSlug}`
-      return NextResponse.rewrite(url, {
-        request: { headers: new Headers({ ...Object.fromEntries(req.headers), "x-tenant-slug": tenantSlug }) },
-      })
+      return NextResponse.rewrite(url, { request: { headers: requestHeaders } })
     }
+
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
-  return res
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico|api|.*\\..*).*)"],
+  matcher: ["/((?!_next|favicon.ico|.*\\..*).*)"],
 }
