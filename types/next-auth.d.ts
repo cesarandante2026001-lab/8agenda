@@ -8,7 +8,6 @@ declare module "next-auth" {
       tenantId: string | null
     } & DefaultSession["user"]
   }
-
   interface User {
     role?: string
     tenantId?: string | null

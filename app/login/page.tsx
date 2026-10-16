@@ -1,44 +1,44 @@
-"use client"
-
-import { useState } from "react"
-import { useSearchParams } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { signIn } from "@/lib/auth"
+import { AuthError } from "next-auth"
 import Link from "next/link"
-import { Suspense } from "react"
 
-function LoginForm() {
-  const params = useSearchParams()
-  const callbackUrl = params.get("callbackUrl") || ""
+export const dynamic = "force-dynamic"
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
+async function loginAction(formData: FormData) {
+  "use server"
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+  const email = String(formData.get("email") || "").trim().toLowerCase()
+  const password = String(formData.get("password") || "")
 
-    // Si viene callbackUrl, usarlo. Si no, dejar que el redirect del server decida.
-    const res = await signIn("credentials", {
+  if (!email || !password) {
+    return { error: "Email y contrasena obligatorios" }
+  }
+
+  try {
+    await signIn("credentials", {
       email,
       password,
-      redirect: false,
-      callbackUrl: callbackUrl || undefined,
+      redirectTo: "/ir",
     })
-
-    if (res?.error) {
-      setError("Email o contrasena incorrectos")
-      setLoading(false)
-      return
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: "Email o contrasena incorrectos" }
     }
-
-    // Redirigir con window.location (no router.push) para forzar recarga completa
-    // y que la cookie de sesion este disponible en el proximo render
-    const destino = callbackUrl || res?.url || "/ir"
-    window.location.href = destino
+    throw error
   }
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const sp = await searchParams
+  const errorMsg = sp.error === "CredentialsSignin"
+    ? "Email o contrasena incorrectos"
+    : sp.error
+      ? "Error al iniciar sesion"
+      : null
 
   return (
     <main className="min-h-screen flex items-center justify-center px-6 py-16 bg-white">
@@ -57,15 +57,15 @@ function LoginForm() {
           <p className="text-sm text-gray-500">Accede a tu cuenta</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form action={loginAction} className="space-y-5">
           <div>
-            <label className="block text-xs tracking-widest uppercase text-gray-500 mb-2">
+            <label htmlFor="email" className="block text-xs tracking-widest uppercase text-gray-500 mb-2">
               Email
             </label>
             <input
+              id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:border-black outline-none"
               placeholder="tu@email.com"
@@ -73,30 +73,29 @@ function LoginForm() {
           </div>
 
           <div>
-            <label className="block text-xs tracking-widest uppercase text-gray-500 mb-2">
+            <label htmlFor="password" className="block text-xs tracking-widest uppercase text-gray-500 mb-2">
               Contrasena
             </label>
             <input
+              id="password"
+              name="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:border-black outline-none"
             />
           </div>
 
-          {error && (
+          {errorMsg && (
             <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-md">
-              {error}
+              {errorMsg}
             </div>
           )}
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white py-4 text-xs tracking-widest uppercase font-medium hover:bg-gray-800 transition disabled:opacity-50"
+            className="w-full bg-black text-white py-4 text-xs tracking-widest uppercase font-medium hover:bg-gray-800 transition"
           >
-            {loading ? "Ingresando..." : "Ingresar"}
+            Ingresar
           </button>
         </form>
 
@@ -108,13 +107,5 @@ function LoginForm() {
         </p>
       </div>
     </main>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-500">Cargando...</div>}>
-      <LoginForm />
-    </Suspense>
   )
 }

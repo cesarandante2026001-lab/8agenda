@@ -17,12 +17,8 @@ export default async function HomePage({
 
   if (session?.user && !vieneDePublico) {
     const role = (session.user as any).role
-    if (["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"].includes(role)) {
-      redirect("/admin")
-    }
-    if (role === "SPECIALIST") {
-      redirect("/especialista")
-    }
+    if (["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"].includes(role)) redirect("/admin")
+    if (role === "SPECIALIST") redirect("/especialista")
   }
 
   const especialidades = await prisma.specialty.findMany({
