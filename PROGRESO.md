@@ -233,3 +233,22 @@ Ambos requieren header X-API-Key con API_KEY_8QLICK.
 ## Variables de entorno
 - API_KEY_8QLICK: secreto compartido entre 8qlick y 8Agenda.
 - EMAIL_FROM: correo remitente (debe estar verificado en Resend).
+
+## REGLA GLOBAL DE LA SUITE 8QLICK (agregada 2026-10-16)
+
+### Multi-tenant primero, siempre
+En TODOS los proyectos de la suite (8Agenda, 8Doce, Retrolog, y los que vengan):
+- El modelo multi-tenant se implementa ANTES de cualquier feature.
+- El filtro por tenantId va desde el primer endpoint y la primera pagina.
+- NUNCA se hace "primero la feature, despues adaptamos a tenant".
+- El script de migracion inicial crea al menos 1 tenant + 1 user OWNER.
+- Todo test de funcionalidad se hace con 2 tenants distintos, no con 1.
+
+### Por que
+Readaptar 40 archivos despues es costoso, lento y genera errores en cascada.
+Hacerlo desde el principio cuesta 10 minutos.
+
+### Aplicacion
+- 8Agenda: ya implementado (completo).
+- 8Doce: revisar y aplicar la misma regla.
+- Retrolog: revisar y aplicar la misma regla.
