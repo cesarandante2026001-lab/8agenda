@@ -52,10 +52,19 @@ export default async function AtenderPage({
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <Link href="/especialista" className="text-xs tracking-widest uppercase text-gray-500 hover:text-black">
           Volver a mis citas
         </Link>
+        {atencionExistente && (
+          <a
+            href={`/atenciones/${atencionExistente.id}/imprimir`}
+            target="_blank"
+            className="text-xs uppercase tracking-wider border border-gray-300 px-3 py-1.5 hover:border-black"
+          >
+            Imprimir
+          </a>
+        )}
       </div>
 
       <h1 className="text-3xl font-light mb-2">Atencion medica</h1>

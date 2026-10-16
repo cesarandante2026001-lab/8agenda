@@ -104,6 +104,15 @@ export default async function FichaPacientePage({
                   )}
                 </summary>
                 <div className="px-5 py-4 border-t border-gray-100 space-y-3 text-sm">
+                  <div className="flex justify-end mb-2">
+                    <a
+                      href={`/atenciones/${a.id}/imprimir`}
+                      target="_blank"
+                      className="text-xs uppercase tracking-wider border border-gray-300 px-3 py-1.5 hover:border-black"
+                    >
+                      Imprimir / Descargar
+                    </a>
+                  </div>
                   <VerCampo label="Motivo" valor={a.motivoConsulta} />
                   <VerCampo label="Anamnesis" valor={a.anamnesis} />
                   <VerCampo label="Examen fisico" valor={a.examenFisico} />
