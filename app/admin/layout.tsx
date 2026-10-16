@@ -1,8 +1,10 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { isAdmin } from "@/lib/auth-helpers"
+import { currentUser } from "@/lib/auth-helpers-extra"
 import { AdminBackButton } from "@/components/AdminBackButton"
 import { BotonCerrarSesion } from "@/components/BotonCerrarSesion"
+import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
@@ -12,12 +14,17 @@ export default async function AdminLayout({
   children: React.ReactNode
 }) {
   const ok = await isAdmin()
-  if (!ok) {
-    const { currentUser } = await import("@/lib/auth-helpers-extra")
-    const u = await currentUser()
-    if (u?.role === "SPECIALIST") redirect("/especialista")
-    redirect("/login?callbackUrl=/admin")
-  }
+  if (!ok) redirect("/login?callbackUrl=/admin")
+
+  const u = await currentUser()
+  const user = u ? await prisma.user.findUnique({
+    where: { id: u.id },
+    include: { tenant: { select: { name: true, slug: true } } },
+  }) : null
+
+  const nombre = user?.name || u?.email || ""
+  const rol = user?.role || ""
+  const institucion = user?.tenant?.name || "Sin institucion"
 
   return (
     <>
@@ -33,6 +40,12 @@ export default async function AdminLayout({
             <Link href="/cuenta/password" className="text-xs uppercase tracking-widest text-gray-500 hover:text-black">
               Cambiar contrasena
             </Link>
+            <div className="text-xs text-right leading-tight border-l border-gray-200 pl-4">
+              <p className="font-medium text-gray-800">{nombre}</p>
+              <p className="text-gray-500">
+                {rol} - {institucion}
+              </p>
+            </div>
             <BotonCerrarSesion />
           </div>
         </div>
