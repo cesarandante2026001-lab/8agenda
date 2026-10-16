@@ -26,6 +26,10 @@ export default function AdminPage() {
       href: "/admin/pacientes",
       title: "Pacientes",
       desc: "Fichas de pacientes con datos medicos.",
+    },    {
+      href: "/admin/atenciones",
+      title: "Atenciones medicas",
+      desc: "Historial completo de consultas, recetas y examenes.",
     },  ]
 
   return (
