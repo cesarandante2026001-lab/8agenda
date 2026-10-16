@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { getUsuario, withTenant } from "@/lib/tenant"
 
 export const dynamic = "force-dynamic"
 
@@ -21,17 +22,23 @@ export default async function AtencionesPage({
   const { q } = await searchParams
   const busqueda = (q || "").trim()
 
+  const u = await getUsuario()
+  const filtroTenant = withTenant(u)
+
   const atenciones = await prisma.atencion.findMany({
-    where: busqueda
-      ? {
-          OR: [
-            { patient: { name: { contains: busqueda, mode: "insensitive" } } },
-            { patient: { rut: { contains: busqueda, mode: "insensitive" } } },
-            { diagnostico: { contains: busqueda, mode: "insensitive" } },
-            { motivoConsulta: { contains: busqueda, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
+    where: {
+      ...filtroTenant,
+      ...(busqueda
+        ? {
+            OR: [
+              { patient: { name: { contains: busqueda, mode: "insensitive" } } },
+              { patient: { rut: { contains: busqueda, mode: "insensitive" } } },
+              { diagnostico: { contains: busqueda, mode: "insensitive" } },
+              { motivoConsulta: { contains: busqueda, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
     orderBy: { createdAt: "desc" },
     take: 200,
     include: {

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { currentUser } from "@/lib/auth-helpers-extra"
+import { tenantDelUsuario } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 import BotonMarcar from "./citas/BotonMarcar"
 
@@ -30,6 +31,10 @@ export default async function EspecialistaPage({
   const esAdmin = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"].includes(u.role)
 
   let where: any = {}
+  // Filtrar por tenant si no es superadmin
+  const tenantFiltro = u.role === "SUPERADMIN" ? null : (u as any).tenantId
+  if (tenantFiltro) where.tenantId = tenantFiltro
+
   if (ver === "activas") {
     where.status = { in: ["RESERVADA", "CONFIRMADA", "EN_SALA"] }
   } else if (ver === "atendidas") {

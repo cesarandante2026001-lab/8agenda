@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { getUsuario, withTenant } from "@/lib/tenant"
 
 export const dynamic = "force-dynamic"
 
@@ -11,8 +12,13 @@ export default async function PacientesPage({
   const { q } = await searchParams
   const busqueda = (q || "").trim()
 
+  const u = await getUsuario()
+  const filtroTenant = withTenant(u)
+
   const pacientes = await prisma.patient.findMany({
-    where: busqueda
+    where: {
+      ...filtroTenant,
+      ...(busqueda
       ? {
           OR: [
             { name: { contains: busqueda, mode: "insensitive" } },
@@ -20,7 +26,8 @@ export default async function PacientesPage({
             { email: { contains: busqueda, mode: "insensitive" } },
           ],
         }
-      : undefined,
+      : {}),
+    },
     orderBy: { name: "asc" },
     take: 200,
     include: { _count: { select: { appointments: true } } },

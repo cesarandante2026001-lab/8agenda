@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import EspecialistasClient from "./EspecialistasClient"
 
 export const dynamic = "force-dynamic"

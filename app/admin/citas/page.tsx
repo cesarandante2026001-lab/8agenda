@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import BotonAnularCita from "./BotonAnularCita"
 
 export const dynamic = "force-dynamic"
@@ -23,7 +24,8 @@ export default async function AdminCitasPage({
   const filtroEstado = sp.estado || "activas"
   const filtroEsp = sp.esp || ""
 
-  const where: any = {}
+  const u = await getUsuario()
+  const where: any = { ...withTenant(u) }
   if (filtroEstado === "activas") {
     where.status = { in: ["RESERVADA", "CONFIRMADA"] }
   } else if (filtroEstado === "canceladas") {
@@ -48,7 +50,7 @@ export default async function AdminCitasPage({
       },
     }),
     prisma.specialty.findMany({
-      where: { active: true },
+      where: { active: true, ...withTenant(u) },
       orderBy: { order: "asc" },
       select: { id: true, name: true },
     }),

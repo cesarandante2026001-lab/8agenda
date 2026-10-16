@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { getUsuario, withTenant } from "@/lib/tenant"
 
 export const dynamic = "force-dynamic"
 
@@ -36,15 +37,19 @@ export default async function AgendaPage({
   const domingo = addDias(lunes, 6)
   const fin = addDias(domingo, 1)
 
+  const u = await getUsuario()
+  const filtroTenant = withTenant(u)
+
   const especialistas = await prisma.specialist.findMany({
-    where: { active: true, ...(espId ? { id: espId } : {}) },
+    where: { active: true, ...filtroTenant, ...(espId ? { id: espId } : {}) },
     orderBy: { name: "asc" },
     include: { specialty: true },
   })
 
   const citas = await prisma.appointment.findMany({
     where: {
-      status: { in: ["RESERVADA", "CONFIRMADA"] },
+      ...filtroTenant,
+      status: { in: ["RESERVADA", "CONFIRMADA", "EN_SALA", "ATENDIDA"] },
       slot: { date: { gte: lunes, lt: fin } },
       ...(espId ? { specialistId: espId } : {}),
     },
@@ -52,7 +57,7 @@ export default async function AgendaPage({
   })
 
   const todasEspecialidades = await prisma.specialty.findMany({
-    where: { active: true },
+    where: { active: true, ...filtroTenant },
     orderBy: { order: "asc" },
     select: { id: true, name: true },
   })

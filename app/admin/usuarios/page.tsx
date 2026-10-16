@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import BotonResetUser from "./BotonResetUser"
 
 export const dynamic = "force-dynamic"
 
 export default async function UsuariosPage() {
+  const u = await getUsuario()
   const usuarios = await prisma.user.findMany({
+    where: { ...withTenant(u) },
     orderBy: { createdAt: "desc" },
     take: 200,
     include: {

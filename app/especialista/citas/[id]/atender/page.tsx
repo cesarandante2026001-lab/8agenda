@@ -26,8 +26,13 @@ export default async function AtenderPage({
 
   const { id } = await params
 
-  const cita = await prisma.appointment.findUnique({
-    where: { id },
+  const tenantFiltro = u.role === "SUPERADMIN" ? null : (u as any).tenantId
+
+  const cita = await prisma.appointment.findFirst({
+    where: {
+      id,
+      ...(tenantFiltro ? { tenantId: tenantFiltro } : {}),
+    },
     include: {
       specialist: { include: { specialty: true } },
       slot: true,

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import BotonAnularCita from "../../citas/BotonAnularCita"
 
 export const dynamic = "force-dynamic"
@@ -21,9 +22,10 @@ export default async function DetalleCitaPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  const u = await getUsuario()
 
-  const cita = await prisma.appointment.findUnique({
-    where: { id },
+  const cita = await prisma.appointment.findFirst({
+    where: { id, ...withTenant(u) },
     include: {
       specialist: { include: { specialty: true } },
       slot: true,

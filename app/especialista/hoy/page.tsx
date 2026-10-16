@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { currentUser } from "@/lib/auth-helpers-extra"
+import { tenantDelUsuario } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 import BotonMarcar from "../citas/BotonMarcar"
 
@@ -14,9 +15,11 @@ export default async function HoyPage() {
   const fin = new Date(inicio.getTime() + 24 * 60 * 60 * 1000)
 
   const esAdmin = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"].includes(u.role)
+  const tenantFiltro = u.role === "SUPERADMIN" ? null : (u as any).tenantId
   let whereHoy: any = {
     status: { in: ["RESERVADA", "CONFIRMADA", "EN_SALA"] },
     slot: { date: { gte: inicio, lt: fin } },
+    ...(tenantFiltro ? { tenantId: tenantFiltro } : {}),
   }
   if (!esAdmin) {
     const esp = await prisma.specialist.findFirst({ where: { userId: u.id } })

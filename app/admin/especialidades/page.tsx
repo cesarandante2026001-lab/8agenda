@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import EspecialidadesClient from "./EspecialidadesClient"
 
 export const dynamic = "force-dynamic"
 
 export default async function EspecialidadesPage() {
+  const u = await getUsuario()
   const especialidades = await prisma.specialty.findMany({
+    where: { ...withTenant(u) },
     orderBy: { order: "asc" },
   })
 
