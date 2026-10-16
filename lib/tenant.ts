@@ -35,12 +35,6 @@ export function esDoctor(u: UsuarioSesion | null) {
   return u?.role === "SPECIALIST"
 }
 
-/**
- * Filtro Prisma para limitar al tenant del usuario.
- * - SUPERADMIN: {} (ve todo)
- * - Usuario con tenant: { tenantId: "xxx" }
- * - Usuario sin tenant y no superadmin: filtro imposible (no ve nada)
- */
 export function withTenant(u: UsuarioSesion | null) {
   if (!u) return { tenantId: "___sin_sesion___" }
   if (esSuperadmin(u)) return {}
