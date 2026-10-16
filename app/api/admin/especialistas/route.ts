@@ -8,9 +8,9 @@ import { prisma } from "@/lib/prisma"
 const schema = z.object({
   name: z.string().min(2).max(100).trim(),
   rut: z.string().max(20).optional().or(z.literal("")),
-  email: z.string().email().toLowerCase().trim(),
+  email: z.string().trim().toLowerCase().email(),
   phone: z.string().max(30).optional().or(z.literal("")),
-  specialtyId: z.string(),
+  specialtyId: z.string().min(1),
   duracionConsulta: z.number().int().min(5).max(240).optional().default(20),
   anticipacionMinima: z.number().int().optional().default(60),
   anticipacionMaxima: z.number().int().optional().default(60),
@@ -48,56 +48,68 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Superadmin debe especificar institucion" }, { status: 400 })
   }
 
-  const body = schema.parse(await req.json())
+  try {
+    const raw = await req.json()
+    console.log("[POST especialistas] body recibido:", raw)
 
-  const esp = await prisma.specialty.findFirst({
-    where: { id: body.specialtyId, tenantId: u.tenantId },
-  })
-  if (!esp) return NextResponse.json({ error: "Especialidad no valida" }, { status: 400 })
+    const body = schema.parse(raw)
 
-  const userExiste = await prisma.user.findUnique({ where: { email: body.email } })
-  if (userExiste) {
-    return NextResponse.json({ error: "Ya existe un usuario con ese email" }, { status: 400 })
+    const esp = await prisma.specialty.findFirst({
+      where: { id: body.specialtyId, tenantId: u.tenantId },
+    })
+    if (!esp) return NextResponse.json({ error: "Especialidad no valida" }, { status: 400 })
+
+    const userExiste = await prisma.user.findUnique({ where: { email: body.email } })
+    if (userExiste) {
+      return NextResponse.json({ error: "Ya existe un usuario con ese email" }, { status: 400 })
+    }
+
+    const passwordPlano = generarPassword()
+    const hash = await bcrypt.hash(passwordPlano, 10)
+
+    const resultado = await prisma.$transaction(async (tx) => {
+      const nuevoUser = await tx.user.create({
+        data: {
+          email: body.email,
+          password: hash,
+          name: body.name,
+          role: "SPECIALIST",
+          tenantId: u.tenantId,
+        },
+      })
+
+      const especialista = await tx.specialist.create({
+        data: {
+          tenantId: u.tenantId!,
+          specialtyId: body.specialtyId,
+          name: body.name,
+          rut: body.rut || null,
+          email: body.email,
+          phone: body.phone || null,
+          duracionConsulta: body.duracionConsulta,
+          anticipacionMinima: body.anticipacionMinima,
+          anticipacionMaxima: body.anticipacionMaxima,
+          userId: nuevoUser.id,
+        },
+        include: { specialty: true },
+      })
+
+      return { especialista, user: { id: nuevoUser.id, email: nuevoUser.email } }
+    })
+
+    return NextResponse.json(
+      {
+        especialista: resultado.especialista,
+        credenciales: { email: body.email, password: passwordPlano },
+      },
+      { status: 201 }
+    )
+  } catch (error: any) {
+    console.error("[POST especialistas] error:", error)
+    if (error?.issues) {
+      const issues = error.issues.map((i: any) => `${i.path.join(".")}: ${i.message}`).join(" | ")
+      return NextResponse.json({ error: "Datos invalidos: " + issues }, { status: 400 })
+    }
+    return NextResponse.json({ error: error?.message || "Error al crear" }, { status: 500 })
   }
-
-  const passwordPlano = generarPassword()
-  const hash = await bcrypt.hash(passwordPlano, 10)
-
-  const resultado = await prisma.$transaction(async (tx) => {
-    const nuevoUser = await tx.user.create({
-      data: {
-        email: body.email,
-        password: hash,
-        name: body.name,
-        role: "SPECIALIST",
-        tenantId: u.tenantId,
-      },
-    })
-
-    const especialista = await tx.specialist.create({
-      data: {
-        tenantId: u.tenantId!,
-        specialtyId: body.specialtyId,
-        name: body.name,
-        rut: body.rut || null,
-        email: body.email,
-        phone: body.phone || null,
-        duracionConsulta: body.duracionConsulta,
-        anticipacionMinima: body.anticipacionMinima,
-        anticipacionMaxima: body.anticipacionMaxima,
-        userId: nuevoUser.id,
-      },
-      include: { specialty: true },
-    })
-
-    return { especialista, user: { id: nuevoUser.id, email: nuevoUser.email } }
-  })
-
-  return NextResponse.json(
-    {
-      especialista: resultado.especialista,
-      credenciales: { email: body.email, password: passwordPlano },
-    },
-    { status: 201 }
-  )
 }
