@@ -45,7 +45,7 @@ function LoginForm() {
       <div className="w-full max-w-md">
         <div className="mb-8">
           <Link
-            href="/"
+            href="/?from=publico"
             className="text-xs tracking-widest uppercase text-gray-500 hover:text-black"
           >
             Volver al inicio

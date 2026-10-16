@@ -1,7 +1,7 @@
 import { auth } from "./auth"
 import type { UserRole } from "@prisma/client"
 
-export const ADMIN_ROLES: UserRole[] = ["SUPERADMIN", "OWNER", "ADMIN"]
+export const ADMIN_ROLES: UserRole[] = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"]
 
 export async function getSession() {
   return auth()
