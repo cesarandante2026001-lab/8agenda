@@ -37,24 +37,14 @@ export function esDoctor(u: UsuarioSesion | null) {
 }
 
 /**
- * Devuelve el tenantId que debe usar la consulta.
- * - Si es SUPERADMIN: null (puede ver todo)
- * - Si es usuario normal: su tenantId (obligatorio)
- * - Si es null y no es superadmin: error
- */
-export function tenantDelUsuario(u: UsuarioSesion | null): string | null {
-  if (!u) throw new Error("Sin sesion")
-  if (esSuperadmin(u)) return null
-  if (!u.tenantId) throw new Error("Usuario sin tenant asignado")
-  return u.tenantId
-}
-
-/**
- * Devuelve un where de Prisma para filtrar por tenant.
- * Uso: prisma.specialty.findMany({ where: { ...withTenant(u) } })
+ * Filtro de Prisma para limitar consultas al tenant del usuario.
+ * - SUPERADMIN: devuelve {} (ve todo)
+ * - Usuario con tenant: devuelve { tenantId: "xxx" }
+ * - Usuario sin tenant y no superadmin: devuelve { tenantId: "___imposible___" } (no ve nada)
  */
 export function withTenant(u: UsuarioSesion | null) {
-  const t = tenantDelUsuario(u)
-  if (t === null) return {} // superadmin ve todo
-  return { tenantId: t }
+  if (!u) return { tenantId: "___sin_sesion___" }
+  if (esSuperadmin(u)) return {}
+  if (!u.tenantId) return { tenantId: "___sin_tenant___" }
+  return { tenantId: u.tenantId }
 }

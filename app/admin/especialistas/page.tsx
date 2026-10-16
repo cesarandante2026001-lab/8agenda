@@ -5,13 +5,17 @@ import EspecialistasClient from "./EspecialistasClient"
 export const dynamic = "force-dynamic"
 
 export default async function EspecialistasPage() {
+  const u = await getUsuario()
+  const filtro = withTenant(u)
+
   const [especialistas, especialidades] = await Promise.all([
     prisma.specialist.findMany({
+      where: { ...filtro },
       include: { specialty: true },
       orderBy: { name: "asc" },
     }),
     prisma.specialty.findMany({
-      where: { active: true },
+      where: { active: true, ...filtro },
       orderBy: { order: "asc" },
     }),
   ])
