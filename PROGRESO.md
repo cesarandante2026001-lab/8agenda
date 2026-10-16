@@ -206,3 +206,30 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 
 ### Retrolog (por definir)
 - Pendiente revisar cuando terminemos 8Agenda.
+
+## Flujo multi-tenant (8qlick -> 8Agenda)
+
+1. Alguien contrata el sistema Agenda desde 8qlick.
+2. 8qlick cobra y, si el pago es exitoso, llama al endpoint de 8Agenda:
+   POST /api/publico/crear-tenant
+   Header: x-api-key: <API_KEY_8QLICK>
+   Body: { slug, name, plan, ownerEmail, ownerName, ... }
+3. 8Agenda crea el Tenant + User OWNER con contrasena temporal autogenerada.
+   Devuelve el tenant + las credenciales temporales en el JSON.
+4. 8qlick muestra las credenciales en pantalla y manda el email al owner
+   (el email tambien lo manda 8Agenda automaticamente).
+5. El owner entra a /login con su email y contrasena temporal.
+6. Si las pierde, 8qlick puede llamar:
+   POST /api/publico/reenviar-credenciales
+   Header: x-api-key: <API_KEY_8QLICK>
+   Body: { tenantSlug }
+   -> genera nueva contrasena, invalida la anterior, reenvia email.
+
+## Endpoints internos de 8Agenda para 8qlick
+- POST /api/publico/crear-tenant
+- POST /api/publico/reenviar-credenciales
+Ambos requieren header X-API-Key con API_KEY_8QLICK.
+
+## Variables de entorno
+- API_KEY_8QLICK: secreto compartido entre 8qlick y 8Agenda.
+- EMAIL_FROM: correo remitente (debe estar verificado en Resend).

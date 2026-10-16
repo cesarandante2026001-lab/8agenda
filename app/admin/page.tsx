@@ -30,6 +30,10 @@ export default function AdminPage() {
       href: "/admin/atenciones",
       title: "Atenciones medicas",
       desc: "Historial completo de consultas, recetas y examenes.",
+    },    {
+      href: "/admin/usuarios",
+      title: "Usuarios",
+      desc: "Ver todos los usuarios del sistema y resetear contrasenas.",
     },  ]
 
   return (
