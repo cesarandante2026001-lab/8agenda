@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { randomBytes } from "crypto"
 import { z } from "zod"
-import { getUsuario, withTenant } from "@/lib/tenant"
+import { getUsuario, withTenant, esSuperadmin } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 
 const schema = z.object({
@@ -41,20 +41,20 @@ export async function POST(req: Request) {
   const u = await getUsuario()
   if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
-  const tenantId = tenantDelUsuario(u)
-  if (!tenantId) {
-    return NextResponse.json({ error: "Selecciona un tenant especifico" }, { status: 400 })
+  if (!u.tenantId && !esSuperadmin(u)) {
+    return NextResponse.json({ error: "Usuario sin institucion" }, { status: 400 })
+  }
+  if (!u.tenantId) {
+    return NextResponse.json({ error: "Superadmin debe especificar institucion" }, { status: 400 })
   }
 
   const body = schema.parse(await req.json())
 
-  // Verificar que la especialidad sea del tenant
   const esp = await prisma.specialty.findFirst({
-    where: { id: body.specialtyId, tenantId },
+    where: { id: body.specialtyId, tenantId: u.tenantId },
   })
   if (!esp) return NextResponse.json({ error: "Especialidad no valida" }, { status: 400 })
 
-  // Verificar que el email no exista
   const userExiste = await prisma.user.findUnique({ where: { email: body.email } })
   if (userExiste) {
     return NextResponse.json({ error: "Ya existe un usuario con ese email" }, { status: 400 })
@@ -70,13 +70,13 @@ export async function POST(req: Request) {
         password: hash,
         name: body.name,
         role: "SPECIALIST",
-        tenantId,
+        tenantId: u.tenantId,
       },
     })
 
     const especialista = await tx.specialist.create({
       data: {
-        tenantId,
+        tenantId: u.tenantId!,
         specialtyId: body.specialtyId,
         name: body.name,
         rut: body.rut || null,

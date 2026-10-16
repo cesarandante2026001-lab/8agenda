@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { getUsuario, withTenant } from "@/lib/tenant"
+import { getUsuario, withTenant, esSuperadmin } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 
 const schema = z.object({
@@ -26,16 +26,19 @@ export async function POST(req: Request) {
   const u = await getUsuario()
   if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
-  const tenantId = tenantDelUsuario(u)
-  if (!tenantId) {
-    return NextResponse.json({ error: "Selecciona un tenant especifico" }, { status: 400 })
+  if (!u.tenantId && !esSuperadmin(u)) {
+    return NextResponse.json({ error: "Usuario sin institucion asignada" }, { status: 400 })
+  }
+
+  if (!u.tenantId) {
+    return NextResponse.json({ error: "Superadmin debe especificar institucion" }, { status: 400 })
   }
 
   const body = schema.parse(await req.json())
 
   const especialidad = await prisma.specialty.create({
     data: {
-      tenantId,
+      tenantId: u.tenantId,
       name: body.name,
       description: body.description || null,
       color: body.color,
