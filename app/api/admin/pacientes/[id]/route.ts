@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { currentUser } from "@/lib/auth-helpers-extra"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 
 const schema = z.object({
@@ -26,36 +26,37 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const u = await currentUser()
+  const u = await getUsuario()
   if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  const permitidos = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST", "SPECIALIST"]
-  if (!permitidos.includes(u.role)) {
-    return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
-  }
 
   const { id } = await params
-  const body = await req.json()
-  const data = schema.parse(body)
+
+  const pac = await prisma.patient.findFirst({
+    where: { id, ...withTenant(u) },
+  })
+  if (!pac) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
+
+  const body = schema.parse(await req.json())
 
   const actualizado = await prisma.patient.update({
     where: { id },
     data: {
-      name: data.name,
-      rut: data.rut || null,
-      birthDate: data.birthDate ? new Date(data.birthDate + "T00:00:00.000Z") : null,
-      email: data.email || null,
-      phone: data.phone || null,
-      address: data.address || null,
-      city: data.city || null,
-      prevision: data.prevision || null,
-      contactoEmergencia: data.contactoEmergencia || null,
-      telefonoEmergencia: data.telefonoEmergencia || null,
-      alergias: data.alergias || null,
-      enfermedadesCronicas: data.enfermedadesCronicas || null,
-      medicamentos: data.medicamentos || null,
-      antecedentesFamiliares: data.antecedentesFamiliares || null,
-      grupoSanguineo: data.grupoSanguineo || null,
-      observaciones: data.observaciones || null,
+      name: body.name,
+      rut: body.rut || null,
+      birthDate: body.birthDate ? new Date(body.birthDate + "T00:00:00.000Z") : null,
+      email: body.email || null,
+      phone: body.phone || null,
+      address: body.address || null,
+      city: body.city || null,
+      prevision: body.prevision || null,
+      contactoEmergencia: body.contactoEmergencia || null,
+      telefonoEmergencia: body.telefonoEmergencia || null,
+      alergias: body.alergias || null,
+      enfermedadesCronicas: body.enfermedadesCronicas || null,
+      medicamentos: body.medicamentos || null,
+      antecedentesFamiliares: body.antecedentesFamiliares || null,
+      grupoSanguineo: body.grupoSanguineo || null,
+      observaciones: body.observaciones || null,
     },
   })
 

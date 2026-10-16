@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { currentUser } from "@/lib/auth-helpers-extra"
+import { getUsuario, withTenant, tenantDelUsuario } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 
 const schema = z.object({
@@ -11,26 +11,19 @@ const schema = z.object({
 })
 
 export async function POST(req: Request) {
-  const u = await currentUser()
+  const u = await getUsuario()
   if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
-  const permitidos = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"]
-  if (!permitidos.includes(u.role)) {
-    return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
+  const tenantId = tenantDelUsuario(u)
+  if (!tenantId) {
+    return NextResponse.json({ error: "Selecciona un tenant especifico" }, { status: 400 })
   }
 
   const body = schema.parse(await req.json())
 
-  let tenant = await prisma.tenant.findFirst()
-  if (!tenant) {
-    tenant = await prisma.tenant.create({
-      data: { slug: "principal", name: "Institucion Principal" },
-    })
-  }
-
   const paciente = await prisma.patient.create({
     data: {
-      tenantId: tenant.id,
+      tenantId,
       name: body.name,
       rut: body.rut || null,
       email: body.email || null,

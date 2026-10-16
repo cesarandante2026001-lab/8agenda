@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { currentUser } from "@/lib/auth-helpers-extra"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 import { enviarAtencionPorEmail } from "@/lib/emails"
 
@@ -17,18 +17,13 @@ export async function POST(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const u = await currentUser()
+  const u = await getUsuario()
   if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-
-  const permitidos = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST", "SPECIALIST"]
-  if (!permitidos.includes(u.role)) {
-    return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
-  }
 
   const { id } = await params
 
-  const atencion = await prisma.atencion.findUnique({
-    where: { id },
+  const atencion = await prisma.atencion.findFirst({
+    where: { id, ...withTenant(u) },
     include: {
       patient: true,
       specialist: { include: { specialty: true } },
@@ -39,15 +34,10 @@ export async function POST(
     },
   })
 
-  if (!atencion) {
-    return NextResponse.json({ error: "Atencion no encontrada" }, { status: 404 })
-  }
-
+  if (!atencion) return NextResponse.json({ error: "No encontrada" }, { status: 404 })
   if (!atencion.patient.email) {
-    return NextResponse.json({ error: "El paciente no tiene email registrado" }, { status: 400 })
+    return NextResponse.json({ error: "El paciente no tiene email" }, { status: 400 })
   }
-
-  // Doctor solo puede enviar sus propias atenciones
   if (u.role === "SPECIALIST" && atencion.specialist.userId !== u.id) {
     return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
   }
@@ -70,24 +60,14 @@ export async function POST(
       duracion: r.duracion,
       indicaciones: r.indicaciones,
     })),
-    examenes: atencion.examenes.map((x) => ({
-      nombre: x.nombre,
-      notas: x.notas,
-    })),
+    examenes: atencion.examenes.map((x) => ({ nombre: x.nombre, notas: x.notas })),
   })
 
   if (resultado && (resultado as any).error) {
-    return NextResponse.json(
-      { error: "Resend rechazo el envio. Revisar configuracion." },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Resend rechazo el envio" }, { status: 500 })
   }
-
   if (resultado && (resultado as any).skipped) {
-    return NextResponse.json(
-      { error: "RESEND_API_KEY no esta configurada en el servidor" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "RESEND_API_KEY no configurada" }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true, to: atencion.patient.email })

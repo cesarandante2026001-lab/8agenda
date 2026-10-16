@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { currentUser } from "@/lib/auth-helpers-extra"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 
 const schema = z.object({
@@ -13,12 +13,8 @@ const schema = z.object({
 })
 
 export async function POST(req: Request) {
-  const u = await currentUser()
+  const u = await getUsuario()
   if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-  const permitidos = ["SUPERADMIN", "OWNER", "ADMIN", "RECEPTIONIST"]
-  if (!permitidos.includes(u.role)) {
-    return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
-  }
 
   try {
     const data = schema.parse(await req.json())
@@ -33,6 +29,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Esa hora ya fue tomada" }, { status: 400 })
     }
 
+    // Verificar que el slot sea del tenant del usuario
+    const esp = await prisma.specialist.findFirst({
+      where: { id: slot.specialistId, ...withTenant(u) },
+    })
+    if (!esp) return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
+
+    // Buscar o crear paciente
+    let paciente = await prisma.patient.findFirst({
+      where: { tenantId: slot.specialist.tenantId, rut: data.patientRut || undefined },
+    })
+    if (!paciente) {
+      paciente = await prisma.patient.create({
+        data: {
+          tenantId: slot.specialist.tenantId,
+          name: data.patientName,
+          rut: data.patientRut || null,
+          email: data.patientEmail,
+          phone: data.patientPhone,
+        },
+      })
+    }
+
     const cita = await prisma.$transaction(async (tx) => {
       await tx.slot.update({
         where: { id: data.slotId },
@@ -44,6 +62,7 @@ export async function POST(req: Request) {
           tenantId: slot.specialist.tenantId,
           specialistId: slot.specialistId,
           slotId: slot.id,
+          patientId: paciente.id,
           status: "RESERVADA",
           patientName: data.patientName,
           patientRut: data.patientRut || null,

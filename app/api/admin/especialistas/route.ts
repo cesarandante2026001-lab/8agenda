@@ -1,34 +1,35 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { randomBytes } from "crypto"
-import type { UserRole } from "@prisma/client"
+import { z } from "zod"
+import { getUsuario, withTenant, tenantDelUsuario } from "@/lib/tenant"
+import { prisma } from "@/lib/prisma"
 
-const ADMIN_ROLES: UserRole[] = ["SUPERADMIN", "OWNER", "ADMIN"]
+const schema = z.object({
+  name: z.string().min(2).max(100).trim(),
+  rut: z.string().max(20).optional().or(z.literal("")),
+  email: z.string().email().toLowerCase().trim(),
+  phone: z.string().max(30).optional().or(z.literal("")),
+  specialtyId: z.string(),
+  duracionConsulta: z.number().int().min(5).max(240).optional().default(20),
+  anticipacionMinima: z.number().int().optional().default(60),
+  anticipacionMaxima: z.number().int().optional().default(60),
+})
 
-function isAdminRole(role?: string): boolean {
-  return !!role && ADMIN_ROLES.includes(role as UserRole)
-}
-
-function generarPassword(): string {
-  // Solo caracteres seguros (sin 0/O, 1/l/I para evitar confusiones)
+function generarPassword() {
   const alfabeto = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789"
   let pwd = ""
   const bytes = randomBytes(10)
-  for (let i = 0; i < 10; i++) {
-    pwd += alfabeto[bytes[i] % alfabeto.length]
-  }
+  for (let i = 0; i < 10; i++) pwd += alfabeto[bytes[i] % alfabeto.length]
   return pwd
 }
 
 export async function GET() {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "No auth" }, { status: 401 })
-  const user = session.user as { role?: string }
-  if (!isAdminRole(user.role)) return NextResponse.json({ error: "Solo admin" }, { status: 403 })
+  const u = await getUsuario()
+  if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
   const especialistas = await prisma.specialist.findMany({
+    where: { ...withTenant(u) },
     include: { specialty: true, user: { select: { id: true, email: true } } },
     orderBy: { name: "asc" },
   })
@@ -37,77 +38,66 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "No auth" }, { status: 401 })
-  const user = session.user as { role?: string }
-  if (!isAdminRole(user.role)) return NextResponse.json({ error: "Solo admin" }, { status: 403 })
+  const u = await getUsuario()
+  if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
-  try {
-    const body = await req.json()
+  const tenantId = tenantDelUsuario(u)
+  if (!tenantId) {
+    return NextResponse.json({ error: "Selecciona un tenant especifico" }, { status: 400 })
+  }
 
-    const email = body.email ? String(body.email).trim().toLowerCase() : null
-    const name = String(body.name || "").trim()
-    if (!name) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 })
-    if (!email) return NextResponse.json({ error: "Email requerido para crear el usuario del doctor" }, { status: 400 })
+  const body = schema.parse(await req.json())
 
-    let tenant = await prisma.tenant.findFirst()
-    if (!tenant) {
-      tenant = await prisma.tenant.create({
-        data: { slug: "principal", name: "Institucion Principal" },
-      })
-    }
+  // Verificar que la especialidad sea del tenant
+  const esp = await prisma.specialty.findFirst({
+    where: { id: body.specialtyId, tenantId },
+  })
+  if (!esp) return NextResponse.json({ error: "Especialidad no valida" }, { status: 400 })
 
-    // Verificar que el email no exista ya
-    const existe = await prisma.user.findUnique({ where: { email } })
-    if (existe) {
-      return NextResponse.json({ error: "Ya existe un usuario con ese email" }, { status: 400 })
-    }
+  // Verificar que el email no exista
+  const userExiste = await prisma.user.findUnique({ where: { email: body.email } })
+  if (userExiste) {
+    return NextResponse.json({ error: "Ya existe un usuario con ese email" }, { status: 400 })
+  }
 
-    const passwordPlano = generarPassword()
-    const passwordHash = await bcrypt.hash(passwordPlano, 10)
+  const passwordPlano = generarPassword()
+  const hash = await bcrypt.hash(passwordPlano, 10)
 
-    const resultado = await prisma.$transaction(async (tx) => {
-      const nuevoUser = await tx.user.create({
-        data: {
-          email,
-          password: passwordHash,
-          name,
-          role: "SPECIALIST",
-          tenantId: tenant.id,
-        },
-      })
-
-      const especialista = await tx.specialist.create({
-        data: {
-          tenantId: tenant.id,
-          specialtyId: String(body.specialtyId),
-          name,
-          rut: body.rut ? String(body.rut).trim() : null,
-          email,
-          phone: body.phone ? String(body.phone).trim() : null,
-          duracionConsulta: Number(body.duracionConsulta) || 20,
-          anticipacionMinima: Number(body.anticipacionMinima) || 60,
-          anticipacionMaxima: Number(body.anticipacionMaxima) || 60,
-          userId: nuevoUser.id,
-        },
-        include: { specialty: true },
-      })
-
-      return { especialista, user: { id: nuevoUser.id, email: nuevoUser.email } }
+  const resultado = await prisma.$transaction(async (tx) => {
+    const nuevoUser = await tx.user.create({
+      data: {
+        email: body.email,
+        password: hash,
+        name: body.name,
+        role: "SPECIALIST",
+        tenantId,
+      },
     })
 
-    return NextResponse.json(
-      {
-        especialista: resultado.especialista,
-        credenciales: {
-          email,
-          password: passwordPlano,
-        },
+    const especialista = await tx.specialist.create({
+      data: {
+        tenantId,
+        specialtyId: body.specialtyId,
+        name: body.name,
+        rut: body.rut || null,
+        email: body.email,
+        phone: body.phone || null,
+        duracionConsulta: body.duracionConsulta,
+        anticipacionMinima: body.anticipacionMinima,
+        anticipacionMaxima: body.anticipacionMaxima,
+        userId: nuevoUser.id,
       },
-      { status: 201 }
-    )
-  } catch (error) {
-    console.error("Error especialista:", error)
-    return NextResponse.json({ error: "Error al crear" }, { status: 500 })
-  }
+      include: { specialty: true },
+    })
+
+    return { especialista, user: { id: nuevoUser.id, email: nuevoUser.email } }
+  })
+
+  return NextResponse.json(
+    {
+      especialista: resultado.especialista,
+      credenciales: { email: body.email, password: passwordPlano },
+    },
+    { status: 201 }
+  )
 }
