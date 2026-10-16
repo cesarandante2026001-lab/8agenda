@@ -1,10 +1,24 @@
 import { auth } from "@/lib/auth"
 
-export async function currentUser() {
+export type UsuarioActual = {
+  id: string
+  email: string
+  name?: string
+  role: string
+  tenantId: string | null
+}
+
+export async function currentUser(): Promise<UsuarioActual | undefined> {
   const session = await auth()
-  return session?.user as
-    | { id: string; email: string; name?: string; role: string }
-    | undefined
+  if (!session?.user) return undefined
+  const u = session.user as any
+  return {
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    role: u.role,
+    tenantId: u.tenantId ?? null,
+  }
 }
 
 export async function isAdmin() {

@@ -49,7 +49,7 @@ export default async function AgendaPage({
   const citas = await prisma.appointment.findMany({
     where: {
       ...filtroTenant,
-      status: { in: ["RESERVADA", "CONFIRMADA", "EN_SALA", "ATENDIDA"] },
+      status: { in: ["RESERVADA", "CONFIRMADA", "EN_SALA", "ATENDIDA", "NO_SHOW"] },
       slot: { date: { gte: lunes, lt: fin } },
       ...(espId ? { specialistId: espId } : {}),
     },

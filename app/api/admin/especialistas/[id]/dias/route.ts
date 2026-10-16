@@ -1,40 +1,39 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { z } from "zod"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
-import type { UserRole } from "@prisma/client"
 
-const ADMIN_ROLES: UserRole[] = ["SUPERADMIN", "OWNER", "ADMIN"]
+const schema = z.object({
+  dias: z.array(z.object({
+    date: z.string(),
+    active: z.boolean(),
+    startTime: z.string().nullable().optional(),
+    endTime: z.string().nullable().optional(),
+    breakStart: z.string().nullable().optional(),
+    breakEnd: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
+  })),
+})
 
-function isAdminRole(role?: string): boolean {
-  return !!role && ADMIN_ROLES.includes(role as UserRole)
+async function verificarEspecialista(id: string, u: any) {
+  return prisma.specialist.findFirst({
+    where: { id, ...withTenant(u) },
+  })
 }
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "No auth" }, { status: 401 })
-  const user = session.user as { role?: string }
-  if (!isAdminRole(user.role)) return NextResponse.json({ error: "Solo admin" }, { status: 403 })
+  const u = await getUsuario()
+  if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
   const { id } = await params
-  const url = new URL(req.url)
-  const year = Number(url.searchParams.get("year"))
-  const month = Number(url.searchParams.get("month")) // 1-12
-
-  if (!year || !month) {
-    return NextResponse.json({ error: "Falta year o month" }, { status: 400 })
-  }
-
-  const desde = new Date(Date.UTC(year, month - 1, 1))
-  const hasta = new Date(Date.UTC(year, month, 1))
+  const esp = await verificarEspecialista(id, u)
+  if (!esp) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
 
   const dias = await prisma.specialistDay.findMany({
-    where: {
-      specialistId: id,
-      date: { gte: desde, lt: hasta },
-    },
+    where: { specialistId: id },
     orderBy: { date: "asc" },
   })
 
@@ -45,81 +44,41 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "No auth" }, { status: 401 })
-  const user = session.user as { role?: string }
-  if (!isAdminRole(user.role)) return NextResponse.json({ error: "Solo admin" }, { status: 403 })
+  const u = await getUsuario()
+  if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
   const { id } = await params
-  const body = await req.json()
+  const esp = await verificarEspecialista(id, u)
+  if (!esp) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
 
-  // body.dias: [{ date: "2026-10-15", active, startTime, endTime, breakStart, breakEnd }]
-  const dias = Array.isArray(body.dias) ? body.dias : []
+  const body = schema.parse(await req.json())
 
-  try {
-    for (const d of dias) {
+  await prisma.$transaction(async (tx) => {
+    for (const d of body.dias) {
       const fecha = new Date(d.date + "T00:00:00.000Z")
-
-      await prisma.specialistDay.upsert({
-        where: {
-          specialistId_date: {
-            specialistId: id,
-            date: fecha,
-          },
+      await tx.specialistDay.upsert({
+        where: { specialistId_date: { specialistId: id, date: fecha } },
+        update: {
+          active: d.active,
+          startTime: d.startTime || null,
+          endTime: d.endTime || null,
+          breakStart: d.breakStart || null,
+          breakEnd: d.breakEnd || null,
+          notes: d.notes || null,
         },
         create: {
           specialistId: id,
           date: fecha,
-          active: Boolean(d.active),
+          active: d.active,
           startTime: d.startTime || null,
           endTime: d.endTime || null,
           breakStart: d.breakStart || null,
           breakEnd: d.breakEnd || null,
-        },
-        update: {
-          active: Boolean(d.active),
-          startTime: d.startTime || null,
-          endTime: d.endTime || null,
-          breakStart: d.breakStart || null,
-          breakEnd: d.breakEnd || null,
+          notes: d.notes || null,
         },
       })
     }
-
-    return NextResponse.json({ ok: true, guardados: dias.length })
-  } catch (error) {
-    console.error("Error guardando dias:", error)
-    return NextResponse.json({ error: "Error al guardar" }, { status: 500 })
-  }
-}
-
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "No auth" }, { status: 401 })
-  const user = session.user as { role?: string }
-  if (!isAdminRole(user.role)) return NextResponse.json({ error: "Solo admin" }, { status: 403 })
-
-  const { id } = await params
-  const url = new URL(req.url)
-  const year = Number(url.searchParams.get("year"))
-  const month = Number(url.searchParams.get("month"))
-
-  if (!year || !month) {
-    return NextResponse.json({ error: "Falta year o month" }, { status: 400 })
-  }
-
-  const desde = new Date(Date.UTC(year, month - 1, 1))
-  const hasta = new Date(Date.UTC(year, month, 1))
-
-  const res = await prisma.specialistDay.deleteMany({
-    where: {
-      specialistId: id,
-      date: { gte: desde, lt: hasta },
-    },
   })
 
-  return NextResponse.json({ ok: true, eliminados: res.count })
+  return NextResponse.json({ ok: true })
 }

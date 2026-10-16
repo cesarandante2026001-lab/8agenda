@@ -1,24 +1,37 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { z } from "zod"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
-import type { UserRole } from "@prisma/client"
 
-const ADMIN_ROLES: UserRole[] = ["SUPERADMIN", "OWNER", "ADMIN"]
+const schema = z.object({
+  dias: z.array(z.object({
+    dayOfWeek: z.enum(["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY"]),
+    startTime: z.string().regex(/^\d{2}:\d{2}$/),
+    endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  })),
+  colacion: z.object({
+    startTime: z.string().regex(/^\d{2}:\d{2}$/),
+    endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  }).optional(),
+})
 
-function isAdminRole(role?: string): boolean {
-  return !!role && ADMIN_ROLES.includes(role as UserRole)
+async function verificarEspecialista(id: string, u: any) {
+  const esp = await prisma.specialist.findFirst({
+    where: { id, ...withTenant(u) },
+  })
+  return esp
 }
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "No auth" }, { status: 401 })
-  const user = session.user as { role?: string }
-  if (!isAdminRole(user.role)) return NextResponse.json({ error: "Solo admin" }, { status: 403 })
+  const u = await getUsuario()
+  if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
   const { id } = await params
+  const esp = await verificarEspecialista(id, u)
+  if (!esp) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
 
   const [availabilities, breaks] = await Promise.all([
     prisma.availability.findMany({ where: { specialistId: id } }),
@@ -28,55 +41,46 @@ export async function GET(
   return NextResponse.json({ availabilities, breaks })
 }
 
-export async function PUT(
+export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "No auth" }, { status: 401 })
-  const user = session.user as { role?: string }
-  if (!isAdminRole(user.role)) return NextResponse.json({ error: "Solo admin" }, { status: 403 })
+  const u = await getUsuario()
+  if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
   const { id } = await params
-  const body = await req.json()
+  const esp = await verificarEspecialista(id, u)
+  if (!esp) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
 
-  // body.availabilities: [{ dayOfWeek, startTime, endTime }]
-  // body.breaks: [{ dayOfWeek, startTime, endTime, label }]
+  const body = schema.parse(await req.json())
 
-  const availabilities = Array.isArray(body.availabilities) ? body.availabilities : []
-  const breaks = Array.isArray(body.breaks) ? body.breaks : []
+  await prisma.$transaction(async (tx) => {
+    await tx.availability.deleteMany({ where: { specialistId: id } })
+    await tx.break.deleteMany({ where: { specialistId: id } })
 
-  try {
-    // Borrar los existentes y recrear
-    await prisma.availability.deleteMany({ where: { specialistId: id } })
-    await prisma.break.deleteMany({ where: { specialistId: id } })
-
-    for (const a of availabilities) {
-      await prisma.availability.create({
-        data: {
+    if (body.dias.length > 0) {
+      await tx.availability.createMany({
+        data: body.dias.map((d) => ({
           specialistId: id,
-          dayOfWeek: a.dayOfWeek,
-          startTime: String(a.startTime),
-          endTime: String(a.endTime),
-        },
+          dayOfWeek: d.dayOfWeek,
+          startTime: d.startTime,
+          endTime: d.endTime,
+        })),
       })
     }
 
-    for (const b of breaks) {
-      await prisma.break.create({
+    if (body.colacion) {
+      await tx.break.create({
         data: {
           specialistId: id,
-          dayOfWeek: b.dayOfWeek,
-          startTime: String(b.startTime),
-          endTime: String(b.endTime),
-          label: b.label ? String(b.label) : null,
+          dayOfWeek: "MONDAY",
+          startTime: body.colacion.startTime,
+          endTime: body.colacion.endTime,
+          label: "Colacion",
         },
       })
     }
+  })
 
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    console.error("Error guardando horarios:", error)
-    return NextResponse.json({ error: "Error al guardar" }, { status: 500 })
-  }
+  return NextResponse.json({ ok: true })
 }

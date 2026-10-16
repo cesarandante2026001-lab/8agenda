@@ -1,5 +1,4 @@
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
 import type { UserRole } from "@prisma/client"
 
 export type UsuarioSesion = {
@@ -37,10 +36,10 @@ export function esDoctor(u: UsuarioSesion | null) {
 }
 
 /**
- * Filtro de Prisma para limitar consultas al tenant del usuario.
- * - SUPERADMIN: devuelve {} (ve todo)
- * - Usuario con tenant: devuelve { tenantId: "xxx" }
- * - Usuario sin tenant y no superadmin: devuelve { tenantId: "___imposible___" } (no ve nada)
+ * Filtro Prisma para limitar al tenant del usuario.
+ * - SUPERADMIN: {} (ve todo)
+ * - Usuario con tenant: { tenantId: "xxx" }
+ * - Usuario sin tenant y no superadmin: filtro imposible (no ve nada)
  */
 export function withTenant(u: UsuarioSesion | null) {
   if (!u) return { tenantId: "___sin_sesion___" }
