@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { getUsuario, withTenant, tenantDelUsuario } from "@/lib/tenant"
+import { getUsuario, withTenant } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 
 const schema = z.object({
