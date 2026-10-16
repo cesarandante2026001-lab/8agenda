@@ -191,3 +191,18 @@ horas medicas y reservas. Forma parte de la suite 8qlick.
 
 ### Retrolog (por definir)
 - Pendiente revisar cuando terminemos 8Agenda.
+
+## Anexo 2026-10-16 - Tareas para otros sistemas (anotadas)
+
+### 8qlick (pagina corporativa)
+- Integrar 8Agenda en la seccion "Sistemas" con boton "Ver demo"
+  que apunte a la URL publica de 8Agenda en Vercel.
+- Hoy 8Agenda aparece como "PROXIMAMENTE". Cambiar a "DISPONIBLE"
+  cuando este deployado.
+- Sistema 8qlick esta en https://8doce.vercel.app/8qlick
+
+### 8Doce (ecommerce de ropa)
+- Pendiente revisar cuando terminemos 8Agenda.
+
+### Retrolog (por definir)
+- Pendiente revisar cuando terminemos 8Agenda.
