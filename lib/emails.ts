@@ -4,7 +4,9 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null
 
-const FROM = "8Agenda <onboarding@resend.dev>"
+const FROM = process.env.EMAIL_FROM
+  ? `8Agenda <${process.env.EMAIL_FROM}>`
+  : "8Agenda <onboarding@resend.dev>"
 const BASE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000"
 
 type DatosReserva = {
@@ -180,4 +182,40 @@ export async function enviarAtencionPorEmail(d: DatosAtencion) {
   `
 
   return enviar(`Resumen de tu atencion - ${d.institucion}`, html, d.to)
+}
+type DatosCredenciales = {
+  to: string
+  ownerNombre: string
+  institucion: string
+  slug: string
+  password: string
+}
+
+export async function enviarCredencialesAlOwner(d: DatosCredenciales) {
+  const url = `${process.env.APP_URL || "http://localhost:3000"}/t/${d.slug}`
+  const loginUrl = `${process.env.APP_URL || "http://localhost:3000"}/login`
+  const html = `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px">
+      <h1 style="font-size:22px;margin:0 0 8px">Bienvenido a 8Agenda</h1>
+      <p style="color:#555;margin:0 0 24px">Hola ${d.ownerNombre}, tu institucion <strong>${d.institucion}</strong> esta lista.</p>
+
+      <div style="border:1px solid #e5e5e5;border-radius:8px;padding:20px;margin-bottom:24px">
+        <p style="margin:4px 0;font-size:13px;color:#666;text-transform:uppercase;letter-spacing:1px">Tus credenciales de acceso</p>
+        <p style="margin:12px 0 4px 0"><strong>Email:</strong> ${d.to}</p>
+        <p style="margin:4px 0"><strong>Contrasena:</strong> ${d.password}</p>
+        <p style="margin:16px 0 4px 0"><strong>Panel de administracion:</strong></p>
+        <p style="margin:0"><a href="${loginUrl}" style="color:#000">${loginUrl}</a></p>
+        <p style="margin:16px 0 4px 0"><strong>Sitio publico de reservas:</strong></p>
+        <p style="margin:0"><a href="${url}" style="color:#000">${url}</a></p>
+      </div>
+
+      <p style="color:#555;font-size:13px">
+        Te recomendamos cambiar la contrasena al ingresar por primera vez.
+      </p>
+
+      <hr style="border:none;border-top:1px solid #eee;margin:32px 0">
+      <p style="color:#999;font-size:12px">8Agenda - 8qlick</p>
+    </div>
+  `
+  return enviar("Bienvenido a 8Agenda - Tus credenciales", html, d.to)
 }
