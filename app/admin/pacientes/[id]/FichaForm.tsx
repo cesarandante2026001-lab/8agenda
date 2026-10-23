@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-type Paciente = {
+type Cliente = {
   id: string
   name: string
   rut: string
@@ -22,12 +22,12 @@ type Paciente = {
   observaciones: string
 }
 
-export default function FichaForm({ paciente }: { paciente: Paciente }) {
-  const [form, setForm] = useState<Paciente>(paciente)
+export default function FichaForm({ cliente }: { cliente: Cliente }) {
+  const [form, setForm] = useState<Cliente>(cliente)
   const [guardando, setGuardando] = useState(false)
   const [msg, setMsg] = useState("")
 
-  function set<K extends keyof Paciente>(k: K, v: Paciente[K]) {
+  function set<K extends keyof Cliente>(k: K, v: Cliente[K]) {
     setForm((f) => ({ ...f, [k]: v }))
   }
 
@@ -36,7 +36,7 @@ export default function FichaForm({ paciente }: { paciente: Paciente }) {
     setGuardando(true)
     setMsg("")
 
-    const r = await fetch(`/api/admin/pacientes/${paciente.id}`, {
+    const r = await fetch(`/api/admin/clientes/${cliente.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),

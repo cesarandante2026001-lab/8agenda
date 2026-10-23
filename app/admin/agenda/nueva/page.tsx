@@ -105,7 +105,7 @@ export default function NuevaCitaPage() {
         Nueva cita <span className="font-semibold">manual</span>
       </h1>
       <p className="text-sm text-gray-500 mb-8">
-        Para cuando un paciente llama por telefono o llega presencial.
+        Para cuando un cliente llama por telefono o llega presencial.
       </p>
 
       <form onSubmit={crear} className="space-y-6">
@@ -163,7 +163,7 @@ export default function NuevaCitaPage() {
         </div>
 
         <div className="border border-gray-200 rounded-lg p-6 space-y-4">
-          <p className="text-xs tracking-widest uppercase text-gray-500 mb-1">Datos del paciente</p>
+          <p className="text-xs tracking-widest uppercase text-gray-500 mb-1">Datos del cliente</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

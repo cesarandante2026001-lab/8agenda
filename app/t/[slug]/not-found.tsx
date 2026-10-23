@@ -8,7 +8,7 @@ export default function NotFound() {
           No encontrado
         </p>
         <h1 className="text-3xl font-light mb-4">
-          Esta institucion <span className="font-semibold">no existe</span>
+          Esta negocio <span className="font-semibold">no existe</span>
         </h1>
         <p className="text-sm text-gray-500 mb-8">
           Verifica la direccion o contacta a soporte.

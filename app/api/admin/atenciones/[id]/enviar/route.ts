@@ -36,7 +36,7 @@ export async function POST(
 
   if (!atencion) return NextResponse.json({ error: "No encontrada" }, { status: 404 })
   if (!atencion.patient.email) {
-    return NextResponse.json({ error: "El paciente no tiene email" }, { status: 400 })
+    return NextResponse.json({ error: "El cliente no tiene email" }, { status: 400 })
   }
   if (u.role === "SPECIALIST" && atencion.specialist.userId !== u.id) {
     return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
@@ -44,8 +44,8 @@ export async function POST(
 
   const resultado = await enviarAtencionPorEmail({
     to: atencion.patient.email,
-    pacienteNombre: atencion.patient.name,
-    institucion: atencion.tenant.name,
+    clienteNombre: atencion.patient.name,
+    negocio: atencion.tenant.name,
     especialista: atencion.specialist.name,
     especialidad: atencion.specialist.specialty.name,
     fecha: formatearFecha(atencion.appointment.slot.date),

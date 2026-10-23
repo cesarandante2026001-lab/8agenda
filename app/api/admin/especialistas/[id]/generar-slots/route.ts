@@ -11,31 +11,37 @@ export async function POST(
 
   const { id } = await params
 
-  // Verificar que el especialista sea del tenant
-  const esp = await prisma.specialist.findFirst({
-    where: { id, ...withTenant(u) },
-  })
-  if (!esp) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
+  try {
+    // Verificar que el especialista pertenezca al negocio
+    const esp = await prisma.specialist.findFirst({
+      where: { id, ...withTenant(u) },
+    })
+    if (!esp) return NextResponse.json({ error: "Especialista no encontrado" }, { status: 404 })
 
-  // Obtener dias activos
-  const dias = await prisma.specialistDay.findMany({
-    where: { specialistId: id, active: true },
-    orderBy: { date: "asc" },
-  })
+    // Obtener dias activos
+    const dias = await prisma.specialistDay.findMany({
+      where: { specialistId: id, active: true },
+      orderBy: { date: "asc" },
+    })
 
-  if (dias.length === 0) {
-    return NextResponse.json({ error: "No hay dias activos. Genera primero el mes con patron." }, { status: 400 })
-  }
+    if (dias.length === 0) {
+      return NextResponse.json({ error: "No hay dias activos. Genera primero el mes con patron." }, { status: 400 })
+    }
 
-  const duracion = esp.duracionConsulta || 20
+    const duracion = esp.duracionConsulta || 20
 
-  let totalCreados = 0
-
-  await prisma.$transaction(async (tx) => {
-    // Borrar slots LIBRES previos del especialista (los tomados se quedan)
-    await tx.slot.deleteMany({
+    // 1. Borrar slots LIBRES previos del especialista
+    await prisma.slot.deleteMany({
       where: { specialistId: id, status: "LIBRE" },
     })
+
+    // 2. Obtener los slots OCUPADOS que ya existen para no duplicarlos
+    const slotsOcupados = await prisma.slot.findMany({
+      where: { specialistId: id, status: "OCUPADO" },
+      select: { date: true, startTime: true }
+    })
+
+    const slotsToCreate = []
 
     for (const dia of dias) {
       const inicio = dia.startTime || "09:00"
@@ -63,29 +69,33 @@ export async function POST(
           startStr >= breakStart && startStr < breakEnd
 
         if (!enColacion) {
-          // Verificar que no exista ya un slot a esa hora (por si acaso)
-          const existe = await tx.slot.findFirst({
-            where: { specialistId: id, date: dia.date, startTime: startStr },
-          })
+          const yaOcupado = slotsOcupados.some(s => 
+            s.date.toISOString() === dia.date.toISOString() && s.startTime === startStr
+          )
 
-          if (!existe) {
-            await tx.slot.create({
-              data: {
-                specialistId: id,
-                date: dia.date,
-                startTime: startStr,
-                endTime: endStr,
-                status: "LIBRE",
-              },
+          if (!yaOcupado) {
+            slotsToCreate.push({
+              specialistId: id,
+              date: dia.date,
+              startTime: startStr,
+              endTime: endStr,
+              status: "LIBRE",
             })
-            totalCreados++
           }
         }
 
         minActual += duracion
       }
     }
-  }, { timeout: 60000 })
 
-  return NextResponse.json({ ok: true, totalCreados })
+    // 3. Insertar todos de una sola vez (rapido y sin timeout)
+    if (slotsToCreate.length > 0) {
+      await prisma.slot.createMany({ data: slotsToCreate })
+    }
+
+    return NextResponse.json({ ok: true, totalCreados: slotsToCreate.length })
+  } catch (error) {
+    console.error("Error generando slots:", error)
+    return NextResponse.json({ error: "Error interno al generar slots: " + (error as Error).message }, { status: 500 })
+  }
 }

@@ -16,7 +16,7 @@ function formatearFecha(fecha: Date | null) {
   })
 }
 
-export default async function FichaPacientePage({
+export default async function FichaClientePage({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -24,7 +24,7 @@ export default async function FichaPacientePage({
   const { id } = await params
   const u = await getUsuario()
 
-  const paciente = await prisma.patient.findFirst({
+  const cliente = await prisma.patient.findFirst({
     where: { id, ...withTenant(u) },
     include: {
       atenciones: {
@@ -47,54 +47,54 @@ export default async function FichaPacientePage({
     },
   })
 
-  if (!paciente) notFound()
+  if (!cliente) notFound()
 
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="mb-6">
         <Link
-          href="/admin/pacientes"
+          href="/admin/clientes"
           className="text-xs tracking-widest uppercase text-gray-500 hover:text-black"
         >
-          Volver a pacientes
+          Volver a clientes
         </Link>
       </div>
 
-      <h1 className="text-3xl font-light mb-1">{paciente.name}</h1>
+      <h1 className="text-3xl font-light mb-1">{cliente.name}</h1>
       <p className="text-sm text-gray-500 mb-8">
-        {paciente.rut ? `RUT ${paciente.rut} - ` : ""}
-        Ficha creada el {formatearFecha(paciente.createdAt)}
+        {cliente.rut ? `RUT ${cliente.rut} - ` : ""}
+        Ficha creada el {formatearFecha(cliente.createdAt)}
       </p>
 
-      <FichaForm paciente={{
-        id: paciente.id,
-        name: paciente.name,
-        rut: paciente.rut || "",
-        birthDate: paciente.birthDate ? paciente.birthDate.toISOString().slice(0, 10) : "",
-        email: paciente.email || "",
-        phone: paciente.phone || "",
-        address: paciente.address || "",
-        city: paciente.city || "",
-        prevision: paciente.prevision || "",
-        contactoEmergencia: paciente.contactoEmergencia || "",
-        telefonoEmergencia: paciente.telefonoEmergencia || "",
-        alergias: paciente.alergias || "",
-        enfermedadesCronicas: paciente.enfermedadesCronicas || "",
-        medicamentos: paciente.medicamentos || "",
-        antecedentesFamiliares: paciente.antecedentesFamiliares || "",
-        grupoSanguineo: paciente.grupoSanguineo || "",
-        observaciones: paciente.observaciones || "",
+      <FichaForm cliente={{
+        id: cliente.id,
+        name: cliente.name,
+        rut: cliente.rut || "",
+        birthDate: cliente.birthDate ? cliente.birthDate.toISOString().slice(0, 10) : "",
+        email: cliente.email || "",
+        phone: cliente.phone || "",
+        address: cliente.address || "",
+        city: cliente.city || "",
+        prevision: cliente.prevision || "",
+        contactoEmergencia: cliente.contactoEmergencia || "",
+        telefonoEmergencia: cliente.telefonoEmergencia || "",
+        alergias: cliente.alergias || "",
+        enfermedadesCronicas: cliente.enfermedadesCronicas || "",
+        medicamentos: cliente.medicamentos || "",
+        antecedentesFamiliares: cliente.antecedentesFamiliares || "",
+        grupoSanguineo: cliente.grupoSanguineo || "",
+        observaciones: cliente.observaciones || "",
       }} />
 
       <div className="mt-12">
         <h2 className="text-xl font-light mb-4">
           Atenciones <span className="font-semibold">medicas</span>
         </h2>
-        {paciente.atenciones.length === 0 ? (
+        {cliente.atenciones.length === 0 ? (
           <p className="text-sm text-gray-500">Sin atenciones registradas.</p>
         ) : (
           <div className="space-y-3">
-            {paciente.atenciones.map((a) => (
+            {cliente.atenciones.map((a) => (
               <details key={a.id} className="border border-gray-200 rounded-lg">
                 <summary className="cursor-pointer px-5 py-4 hover:bg-gray-50">
                   <span className="font-medium">{formatearFecha(a.createdAt)}</span>
@@ -132,7 +132,7 @@ export default async function FichaPacientePage({
 
                   {a.recetas.length > 0 && (
                     <div className="pt-3 border-t border-gray-100">
-                      <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Recetas</p>
+                      <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Recomendacioness</p>
                       <div className="space-y-2">
                         {a.recetas.map((r: any) => (
                           <div key={r.id} className="border-l-2 border-blue-400 pl-3 py-1">
@@ -163,7 +163,7 @@ export default async function FichaPacientePage({
 
                   {a.recetas.length > 0 && (
                     <div className="pt-3 border-t border-gray-100">
-                      <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Recetas</p>
+                      <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Recomendacioness</p>
                       <div className="space-y-2">
                         {a.recetas.map((r: any) => (
                           <div key={r.id} className="border-l-2 border-blue-400 pl-3 py-1">
@@ -202,7 +202,7 @@ export default async function FichaPacientePage({
         <h2 className="text-xl font-light mb-4">
           Historial de <span className="font-semibold">citas</span>
         </h2>
-        {paciente.appointments.length === 0 ? (
+        {cliente.appointments.length === 0 ? (
           <p className="text-sm text-gray-500">Sin citas registradas.</p>
         ) : (
           <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -216,7 +216,7 @@ export default async function FichaPacientePage({
                 </tr>
               </thead>
               <tbody>
-                {paciente.appointments.map((a) => (
+                {cliente.appointments.map((a) => (
                   <tr key={a.id} className="border-t border-gray-100">
                     <td className="px-4 py-3">{formatearFecha(a.slot.date)}</td>
                     <td className="px-4 py-3">{a.slot.startTime}</td>

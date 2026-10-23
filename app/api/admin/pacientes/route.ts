@@ -15,15 +15,15 @@ export async function POST(req: Request) {
   if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
   if (!u.tenantId && !esSuperadmin(u)) {
-    return NextResponse.json({ error: "Usuario sin institucion" }, { status: 400 })
+    return NextResponse.json({ error: "Usuario sin negocio" }, { status: 400 })
   }
   if (!u.tenantId) {
-    return NextResponse.json({ error: "Superadmin debe especificar institucion" }, { status: 400 })
+    return NextResponse.json({ error: "Superadmin debe especificar negocio" }, { status: 400 })
   }
 
   const body = schema.parse(await req.json())
 
-  const paciente = await prisma.patient.create({
+  const cliente = await prisma.patient.create({
     data: {
       tenantId: u.tenantId,
       name: body.name,
@@ -33,5 +33,5 @@ export async function POST(req: Request) {
     },
   })
 
-  return NextResponse.json({ paciente }, { status: 201 })
+  return NextResponse.json({ cliente }, { status: 201 })
 }

@@ -115,7 +115,7 @@ export default async function EspecialistaPage({
               <tr>
                 <th className="text-left px-4 py-3">Fecha</th>
                 <th className="text-left px-4 py-3">Hora</th>
-                <th className="text-left px-4 py-3">Paciente</th>
+                <th className="text-left px-4 py-3">Cliente</th>
                 <th className="text-left px-4 py-3">Especialista</th>
                 <th className="text-left px-4 py-3">Estado</th>
                 <th className="text-right px-4 py-3">Accion</th>

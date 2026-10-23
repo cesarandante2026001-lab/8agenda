@@ -27,11 +27,11 @@ export async function POST(req: Request) {
   if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
   if (!u.tenantId && !esSuperadmin(u)) {
-    return NextResponse.json({ error: "Usuario sin institucion asignada" }, { status: 400 })
+    return NextResponse.json({ error: "Usuario sin negocio asignada" }, { status: 400 })
   }
 
   if (!u.tenantId) {
-    return NextResponse.json({ error: "Superadmin debe especificar institucion" }, { status: 400 })
+    return NextResponse.json({ error: "Superadmin debe especificar negocio" }, { status: 400 })
   }
 
   const body = schema.parse(await req.json())

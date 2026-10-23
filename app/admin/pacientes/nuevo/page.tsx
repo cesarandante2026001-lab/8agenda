@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
-export default function NuevoPacientePage() {
+export default function NuevoClientePage() {
   const router = useRouter()
   const [name, setName] = useState("")
   const [rut, setRut] = useState("")
@@ -18,7 +18,7 @@ export default function NuevoPacientePage() {
     setError("")
     setGuardando(true)
 
-    const r = await fetch("/api/admin/pacientes", {
+    const r = await fetch("/api/admin/clientes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -36,18 +36,18 @@ export default function NuevoPacientePage() {
       return
     }
 
-    router.push(`/admin/pacientes/${data.paciente.id}`)
+    router.push(`/admin/clientes/${data.cliente.id}`)
   }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="mb-6">
-        <Link href="/admin/pacientes" className="text-xs tracking-widest uppercase text-gray-500 hover:text-black">
-          Volver a pacientes
+        <Link href="/admin/clientes" className="text-xs tracking-widest uppercase text-gray-500 hover:text-black">
+          Volver a clientes
         </Link>
       </div>
 
-      <h1 className="text-3xl font-light mb-2">Nuevo paciente</h1>
+      <h1 className="text-3xl font-light mb-2">Nuevo cliente</h1>
       <p className="text-sm text-gray-500 mb-8">
         Crea la ficha. Despues podes completar los datos medicos.
       </p>
@@ -104,7 +104,7 @@ export default function NuevoPacientePage() {
           disabled={guardando}
           className="w-full bg-black text-white py-4 text-xs tracking-widest uppercase font-medium hover:bg-gray-800 transition disabled:opacity-50"
         >
-          {guardando ? "Creando..." : "Crear paciente"}
+          {guardando ? "Creando..." : "Crear cliente"}
         </button>
       </form>
     </div>

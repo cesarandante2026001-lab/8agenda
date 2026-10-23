@@ -41,7 +41,7 @@ export default async function AgendaPage({
   const filtroTenant = withTenant(u)
 
   const especialistas = await prisma.specialist.findMany({
-    where: { active: true, ...filtroTenant, ...(espId ? { id: espId } : {}) },
+    where: { active: true, ...filtroTenant, ...(espId ? { specialtyId: espId } : {}) },
     orderBy: { name: "asc" },
     include: { specialty: true },
   })

@@ -27,7 +27,7 @@ export default async function UsuariosPage() {
       </h1>
       <p className="text-sm text-gray-500 mb-8">
         {usuarios.length} usuario{usuarios.length === 1 ? "" : "s"}
-        {esSuper ? " en todas las instituciones." : " en tu institucion."}
+        {esSuper ? " en todas las negocioes." : " en tu negocio."}
       </p>
 
       <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -37,7 +37,7 @@ export default async function UsuariosPage() {
               <th className="text-left px-4 py-3">Nombre</th>
               <th className="text-left px-4 py-3">Email</th>
               <th className="text-left px-4 py-3">Rol</th>
-              <th className="text-left px-4 py-3">Institucion</th>
+              <th className="text-left px-4 py-3">Negocio</th>
               <th className="text-left px-4 py-3">Creado</th>
               <th className="text-right px-4 py-3">Accion</th>
             </tr>

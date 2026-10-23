@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     // Verificar que el slug y el email no existan
     const tenantExistente = await prisma.tenant.findUnique({ where: { slug: body.slug } })
     if (tenantExistente) {
-      return NextResponse.json({ error: "Ya existe una institucion con ese slug" }, { status: 400 })
+      return NextResponse.json({ error: "Ya existe una negocio con ese slug" }, { status: 400 })
     }
 
     const userExistente = await prisma.user.findUnique({ where: { email: body.ownerEmail } })
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
     enviarCredencialesAlOwner({
       to: body.ownerEmail,
       ownerNombre: body.ownerName,
-      institucion: body.name,
+      negocio: body.name,
       slug: body.slug,
       password: passwordPlano,
     }).catch((e) => console.error("[crear-tenant] email fallo:", e))
@@ -125,6 +125,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.issues[0]?.message || "Datos invalidos" }, { status: 400 })
     }
     console.error("Error crear tenant:", error)
-    return NextResponse.json({ error: "Error al crear la institucion" }, { status: 500 })
+    return NextResponse.json({ error: "Error al crear la negocio" }, { status: 500 })
   }
 }

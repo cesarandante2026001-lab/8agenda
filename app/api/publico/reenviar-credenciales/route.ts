@@ -42,12 +42,12 @@ export async function POST(req: Request) {
     })
 
     if (!tenant) {
-      return NextResponse.json({ error: "Institucion no encontrada" }, { status: 404 })
+      return NextResponse.json({ error: "Negocio no encontrada" }, { status: 404 })
     }
 
     const owner = tenant.users[0]
     if (!owner) {
-      return NextResponse.json({ error: "La institucion no tiene owner" }, { status: 400 })
+      return NextResponse.json({ error: "La negocio no tiene owner" }, { status: 400 })
     }
 
     const passwordPlano = generarPassword()
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     enviarCredencialesAlOwner({
       to: owner.email,
       ownerNombre: owner.name || owner.email,
-      institucion: tenant.name,
+      negocio: tenant.name,
       slug: tenant.slug,
       password: passwordPlano,
     }).catch((e) => console.error("[reenviar] email fallo:", e))

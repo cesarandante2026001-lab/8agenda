@@ -63,7 +63,7 @@ export default async function AtencionesPage({
           type="text"
           name="q"
           defaultValue={busqueda}
-          placeholder="Buscar por paciente, RUT, diagnostico o motivo..."
+          placeholder="Buscar por cliente, RUT, diagnostico o motivo..."
           className="w-full px-4 py-3 border border-gray-300 rounded-md focus:border-black outline-none"
         />
       </form>
@@ -80,7 +80,7 @@ export default async function AtencionesPage({
             <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
               <tr>
                 <th className="text-left px-4 py-3">Fecha</th>
-                <th className="text-left px-4 py-3">Paciente</th>
+                <th className="text-left px-4 py-3">Cliente</th>
                 <th className="text-left px-4 py-3">Profesional</th>
                 <th className="text-left px-4 py-3">Diagnostico</th>
                 <th className="text-left px-4 py-3">Contenido</th>
@@ -106,7 +106,7 @@ export default async function AtencionesPage({
                     <p className="truncate">{a.diagnostico || "-"}</p>
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-600">
-                    {a._count.recetas > 0 && <span className="mr-3">{a._count.recetas} receta{a._count.recetas === 1 ? "" : "s"}</span>}
+                    {a._count.recetas > 0 && <span className="mr-3">{a._count.recetas} recomendación{a._count.recetas === 1 ? "" : "s"}</span>}
                     {a._count.examenes > 0 && <span>{a._count.examenes} examen{a._count.examenes === 1 ? "" : "es"}</span>}
                     {a._count.recetas === 0 && a._count.examenes === 0 && <span className="text-gray-400">-</span>}
                   </td>

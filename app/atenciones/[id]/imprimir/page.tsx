@@ -56,7 +56,7 @@ export default async function ImprimirAtencionPage({
         {/* Acciones fuera de la impresion */}
         <div className="mb-6 flex items-center justify-between print:hidden">
           <Link
-            href={`/admin/pacientes/${atencion.patientId}`}
+            href={`/admin/clientes/${atencion.patientId}`}
             className="text-xs tracking-widest uppercase text-gray-500 hover:text-black"
           >
             Volver a la ficha
@@ -93,10 +93,10 @@ export default async function ImprimirAtencionPage({
           </div>
         </header>
 
-        {/* Datos del paciente */}
+        {/* Datos del cliente */}
         <section className="mb-6">
           <h2 className="text-xs uppercase tracking-wider text-gray-500 mb-2 border-b border-gray-200 pb-1">
-            Paciente
+            Cliente
           </h2>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
             <p><span className="text-gray-500">Nombre:</span> <strong>{atencion.patient.name}</strong></p>
@@ -151,7 +151,7 @@ export default async function ImprimirAtencionPage({
         {atencion.motivoConsulta && (
           <section className="mb-6">
             <h2 className="text-xs uppercase tracking-wider text-gray-500 mb-2 border-b border-gray-200 pb-1">
-              Motivo de consulta
+              Motivo de la visita
             </h2>
             <p className="text-sm whitespace-pre-wrap">{atencion.motivoConsulta}</p>
           </section>
@@ -197,11 +197,11 @@ export default async function ImprimirAtencionPage({
           </section>
         )}
 
-        {/* Recetas */}
+        {/* Recomendacioness */}
         {atencion.recetas.length > 0 && (
           <section className="mb-6">
             <h2 className="text-xs uppercase tracking-wider text-gray-500 mb-2 border-b border-gray-200 pb-1">
-              Receta
+              Recomendaciones
             </h2>
             <ol className="space-y-3 text-sm">
               {atencion.recetas.map((r, i) => (

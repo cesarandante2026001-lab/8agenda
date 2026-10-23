@@ -124,7 +124,7 @@ export default function EspecialistasClient({
       <div className="max-w-6xl mx-auto px-6 py-10">
         <h1 className="text-3xl font-light mb-1">Especialistas</h1>
         <p className="text-sm text-gray-500 mb-8">
-          Crea y administra los profesionales de tu institucion.
+          Crea y administra los profesionales de tu negocio.
         </p>
 
         {msg && (

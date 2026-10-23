@@ -96,7 +96,7 @@ export default function AnularPage() {
             Datos de la reserva
           </p>
           <div className="space-y-2 text-sm">
-            <p><span className="text-gray-500">Paciente:</span> {reserva.patientName}</p>
+            <p><span className="text-gray-500">Cliente:</span> {reserva.patientName}</p>
             <p><span className="text-gray-500">Especialidad:</span> {reserva.especialidad}</p>
             <p><span className="text-gray-500">Especialista:</span> {reserva.especialista}</p>
             <p><span className="text-gray-500">Fecha:</span> {reserva.fecha}</p>

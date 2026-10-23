@@ -4,7 +4,7 @@ import { getUsuario, withTenant } from "@/lib/tenant"
 
 export const dynamic = "force-dynamic"
 
-export default async function PacientesPage({
+export default async function ClientesPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>
@@ -15,7 +15,7 @@ export default async function PacientesPage({
   const u = await getUsuario()
   const filtroTenant = withTenant(u)
 
-  const pacientes = await prisma.patient.findMany({
+  const clientes = await prisma.patient.findMany({
     where: {
       ...filtroTenant,
       ...(busqueda
@@ -38,17 +38,17 @@ export default async function PacientesPage({
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-3xl font-light mb-2">
-            Pacientes <span className="font-semibold">registrados</span>
+            Clientes <span className="font-semibold">registrados</span>
           </h1>
           <p className="text-sm text-gray-500">
-            {pacientes.length} resultado{pacientes.length === 1 ? "" : "s"}
+            {clientes.length} resultado{clientes.length === 1 ? "" : "s"}
           </p>
         </div>
         <Link
-          href="/admin/pacientes/nuevo"
+          href="/admin/clientes/nuevo"
           className="bg-black text-white px-5 py-3 text-xs tracking-widest uppercase font-medium hover:bg-gray-800 transition"
         >
-          + Nuevo paciente
+          + Nuevo cliente
         </Link>
       </div>
 
@@ -62,10 +62,10 @@ export default async function PacientesPage({
         />
       </form>
 
-      {pacientes.length === 0 ? (
+      {clientes.length === 0 ? (
         <div className="border border-dashed border-gray-200 rounded-lg p-12 text-center">
           <p className="text-sm text-gray-400">
-            {busqueda ? "Sin resultados para esa busqueda." : "Aun no hay pacientes registrados."}
+            {busqueda ? "Sin resultados para esa busqueda." : "Aun no hay clientes registrados."}
           </p>
         </div>
       ) : (
@@ -82,10 +82,10 @@ export default async function PacientesPage({
               </tr>
             </thead>
             <tbody>
-              {pacientes.map((p) => (
+              {clientes.map((p) => (
                 <tr key={p.id} className="border-t border-gray-100 hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/pacientes/${p.id}`} className="font-medium hover:underline">
+                    <Link href={`/admin/clientes/${p.id}`} className="font-medium hover:underline">
                       {p.name}
                     </Link>
                   </td>
@@ -95,7 +95,7 @@ export default async function PacientesPage({
                   <td className="px-4 py-3 text-right text-gray-500">{p._count.appointments}</td>
                   <td className="px-4 py-3 text-right">
                     <Link
-                      href={`/admin/pacientes/${p.id}`}
+                      href={`/admin/clientes/${p.id}`}
                       className="text-xs uppercase tracking-wider text-gray-600 hover:text-black"
                     >
                       Ver ficha

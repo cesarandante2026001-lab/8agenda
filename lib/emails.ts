@@ -100,7 +100,7 @@ export async function enviarRecordatorio(d: Omit<DatosReserva, "cancelToken"> & 
 type DatosAtencion = {
   to: string
   pacienteNombre: string
-  institucion: string
+  negocio: string
   especialista: string
   especialidad: string
   fecha: string
@@ -145,7 +145,7 @@ export async function enviarAtencionPorEmail(d: DatosAtencion) {
   const html = `
     <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;color:#222">
       <div style="border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:24px">
-        <h1 style="font-size:20px;margin:0">${d.institucion}</h1>
+        <h1 style="font-size:20px;margin:0">${d.negocio}</h1>
         <p style="color:#666;font-size:12px;margin:6px 0 0;text-transform:uppercase;letter-spacing:1px">Resumen de atencion medica</p>
       </div>
 
@@ -177,16 +177,16 @@ export async function enviarAtencionPorEmail(d: DatosAtencion) {
       ${examenesHtml}
 
       <hr style="border:none;border-top:1px solid #eee;margin:32px 0">
-      <p style="color:#999;font-size:12px;text-align:center">${d.institucion}</p>
+      <p style="color:#999;font-size:12px;text-align:center">${d.negocio}</p>
     </div>
   `
 
-  return enviar(`Resumen de tu atencion - ${d.institucion}`, html, d.to)
+  return enviar(`Resumen de tu atencion - ${d.negocio}`, html, d.to)
 }
 type DatosCredenciales = {
   to: string
   ownerNombre: string
-  institucion: string
+  negocio: string
   slug: string
   password: string
 }
@@ -197,7 +197,7 @@ export async function enviarCredencialesAlOwner(d: DatosCredenciales) {
   const html = `
     <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px">
       <h1 style="font-size:22px;margin:0 0 8px">Bienvenido a 8Agenda</h1>
-      <p style="color:#555;margin:0 0 24px">Hola ${d.ownerNombre}, tu institucion <strong>${d.institucion}</strong> esta lista.</p>
+      <p style="color:#555;margin:0 0 24px">Hola ${d.ownerNombre}, tu negocio <strong>${d.negocio}</strong> esta lista.</p>
 
       <div style="border:1px solid #e5e5e5;border-radius:8px;padding:20px;margin-bottom:24px">
         <p style="margin:4px 0;font-size:13px;color:#666;text-transform:uppercase;letter-spacing:1px">Tus credenciales de acceso</p>

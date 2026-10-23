@@ -56,7 +56,7 @@ export default async function DetalleCitaPage({
       </div>
 
       <div className="border border-gray-200 rounded-lg p-6 mb-4">
-        <p className="text-xs uppercase tracking-wider text-gray-500 mb-4">Paciente</p>
+        <p className="text-xs uppercase tracking-wider text-gray-500 mb-4">Cliente</p>
         <p className="text-lg mb-2">{cita.patientName}</p>
         <div className="text-sm space-y-1">
           {cita.patientRut && (

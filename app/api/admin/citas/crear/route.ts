@@ -24,6 +24,17 @@ export async function POST(req: Request) {
       include: { specialist: true },
     })
 
+  const now = new Date();
+  const [h, m] = slot.startTime.split(':').map(Number);
+  const slotDateTime = new Date(slot.date);
+  slotDateTime.setUTCHours(h, m, 0, 0);
+
+  // Si el slot es anterior a la hora actual, rebotar
+  if (slotDateTime < now) {
+    return NextResponse.json({ error: "Esta hora ya ha pasado. Por favor selecciona otra." }, { status: 400 });
+  }
+
+
     if (!slot) return NextResponse.json({ error: "Hora no existe" }, { status: 404 })
     if (slot.status !== "LIBRE") {
       return NextResponse.json({ error: "Esa hora ya fue tomada" }, { status: 400 })
@@ -35,12 +46,12 @@ export async function POST(req: Request) {
     })
     if (!esp) return NextResponse.json({ error: "Sin permiso" }, { status: 403 })
 
-    // Buscar o crear paciente
-    let paciente = await prisma.patient.findFirst({
+    // Buscar o crear cliente
+    let cliente = await prisma.patient.findFirst({
       where: { tenantId: slot.specialist.tenantId, rut: data.patientRut || undefined },
     })
-    if (!paciente) {
-      paciente = await prisma.patient.create({
+    if (!cliente) {
+      cliente = await prisma.patient.create({
         data: {
           tenantId: slot.specialist.tenantId,
           name: data.patientName,
@@ -62,7 +73,7 @@ export async function POST(req: Request) {
           tenantId: slot.specialist.tenantId,
           specialistId: slot.specialistId,
           slotId: slot.id,
-          patientId: paciente.id,
+          patientId: cliente.id,
           status: "RESERVADA",
           patientName: data.patientName,
           patientRut: data.patientRut || null,

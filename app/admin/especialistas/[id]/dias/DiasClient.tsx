@@ -49,6 +49,7 @@ function diasDelMes(year: number, month: number): (string | null)[] {
 }
 
 export default function DiasClient({ especialista }: { especialista: Especialista }) {
+  const [isGenerating, setIsGenerating] = useState(false)
   const hoy = new Date()
   const [year, setYear] = useState(hoy.getFullYear())
   const [month, setMonth] = useState(hoy.getMonth() + 1)
@@ -226,24 +227,20 @@ export default function DiasClient({ especialista }: { especialista: Especialist
     if (!confirm("Esto va a generar las horas disponibles de los proximos 90 dias. Continuar?")) return
     setGenerandoSlots(true)
     setOk("")
-    setError("")
-
-    const r = await fetch(
-      "/api/admin/especialistas/" + especialista.id + "/generar-slots",
-      { method: "POST" }
-    )
-
-    setGenerandoSlots(false)
-
-    if (!r.ok) {
-      setError("Error al generar slots")
-      return
+    try {
+      const r = await fetch(`/api/admin/especialistas/${id}/generar-slots`, { method: "POST" })
+      const data = await r.json()
+      if (r.ok) {
+        alert(`✅ Se generaron ${data.totalCreados} horas disponibles.`)
+        await cargar()
+      } else {
+        alert("Error: " + (data.error || "Desconocido"))
+      }
+    } catch (e) {
+      alert("Error de conexion con el servidor")
+    } finally {
+      setGenerandoSlots(false)
     }
-
-    const data = await r.json()
-    alert("Slots generados: " + data.creados + " horas disponibles en " + data.dias + " dias (" + data.eliminados + " slots viejos eliminados)")
-    setOk("Slots generados: " + data.creados + " horas")
-    setTimeout(() => setOk(""), 8000)
   }
   const diasMes = diasDelMes(year, month)
 

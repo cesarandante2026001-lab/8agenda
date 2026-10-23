@@ -60,5 +60,5 @@ export async function PATCH(
     },
   })
 
-  return NextResponse.json({ ok: true, paciente: actualizado })
+  return NextResponse.json({ ok: true, cliente: actualizado })
 }

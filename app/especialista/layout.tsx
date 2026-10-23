@@ -21,7 +21,7 @@ export default async function EspecialistaLayout({
       <header className="border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/especialista" className="text-lg font-semibold tracking-tight">
-            Panel especialista
+            Panel del Profesional
           </Link>
           <nav className="flex items-center gap-6 text-sm">
             <Link href="/especialista" className="text-gray-700 hover:text-black">

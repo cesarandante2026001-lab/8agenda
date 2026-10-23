@@ -78,7 +78,7 @@ export default async function AtenderPage({
       </p>
 
       <div className="border border-gray-200 rounded-lg p-5 mb-6 bg-gray-50">
-        <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Paciente</p>
+        <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Cliente</p>
         <p className="text-lg font-medium">{cita.patientName}</p>
         <div className="text-sm text-gray-600 mt-1 space-y-0.5">
           {cita.patientRut && <p>RUT: {cita.patientRut}</p>}
@@ -89,7 +89,7 @@ export default async function AtenderPage({
         </div>
         {cita.patient && (
           <Link
-            href={`/admin/pacientes/${cita.patient.id}`}
+            href={`/admin/clientes/${cita.patient.id}`}
             className="inline-block mt-3 text-xs uppercase tracking-wider text-gray-600 hover:text-black"
           >
             Ver ficha completa

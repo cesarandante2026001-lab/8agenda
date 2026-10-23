@@ -31,6 +31,17 @@ export async function POST(req: Request) {
       include: { specialist: { include: { specialty: true } } },
     })
 
+  const now = new Date();
+  const [h, m] = slot.startTime.split(':').map(Number);
+  const slotDateTime = new Date(slot.date);
+  slotDateTime.setUTCHours(h, m, 0, 0);
+
+  // Si el slot es anterior a la hora actual, rebotar
+  if (slotDateTime < now) {
+    return NextResponse.json({ error: "Esta hora ya ha pasado. Por favor selecciona otra." }, { status: 400 });
+  }
+
+
     if (!slot) {
       return NextResponse.json({ error: "Hora no existe" }, { status: 404 })
     }
@@ -70,7 +81,7 @@ export async function POST(req: Request) {
     // Email de confirmacion (no bloquea la respuesta si falla)
     enviarConfirmacionReserva({
       to: data.patientEmail,
-      pacienteNombre: data.patientName,
+      clienteNombre: data.patientName,
       especialista: slot.specialist.name,
       especialidad: slot.specialist.specialty.name,
       fecha: formatearFecha(slot.date),

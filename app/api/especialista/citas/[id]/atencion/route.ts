@@ -3,7 +3,7 @@ import { z } from "zod"
 import { currentUser } from "@/lib/auth-helpers-extra"
 import { prisma } from "@/lib/prisma"
 
-const recetaSchema = z.object({
+const recomendaciónSchema = z.object({
   medicamento: z.string().min(1).max(200),
   dosis: z.string().max(100).optional().or(z.literal("")),
   frecuencia: z.string().max(100).optional().or(z.literal("")),
@@ -29,7 +29,7 @@ const schema = z.object({
   temperatura: z.string().max(20).optional().or(z.literal("")),
   saturacion: z.string().max(20).optional().or(z.literal("")),
   frecuenciaResp: z.string().max(20).optional().or(z.literal("")),
-  recetas: z.array(recetaSchema).max(50).optional(),
+  recetas: z.array(recomendaciónSchema).max(50).optional(),
   examenes: z.array(examenSchema).max(50).optional(),
 })
 
@@ -54,7 +54,7 @@ export async function POST(
   })
   if (!cita) return NextResponse.json({ error: "Cita no encontrada" }, { status: 404 })
   if (!cita.patientId) {
-    return NextResponse.json({ error: "La cita no esta ligada a un paciente" }, { status: 400 })
+    return NextResponse.json({ error: "La cita no esta ligada a un cliente" }, { status: 400 })
   }
 
   if (u.role === "SPECIALIST" && cita.specialist.userId !== u.id) {
@@ -90,11 +90,11 @@ export async function POST(
     })
 
     // Reemplazar recetas y examenes (borrar y crear)
-    await tx.receta.deleteMany({ where: { atencionId: a.id } })
+    await tx.recomendación.deleteMany({ where: { atencionId: a.id } })
     await tx.solicitudExamen.deleteMany({ where: { atencionId: a.id } })
 
     if (body.recetas && body.recetas.length > 0) {
-      await tx.receta.createMany({
+      await tx.recomendación.createMany({
         data: body.recetas.map((r, i) => ({
           atencionId: a.id,
           medicamento: r.medicamento,
