@@ -55,6 +55,22 @@ export async function POST(req: Request) {
   }
 }
 
+
+export async function PATCH(req: Request) {
+  const u = await getSessionUser()
+  if (u?.role !== "SUPERADMIN") return NextResponse.json({ error: "Solo Superadmin" }, { status: 403 })
+  
+  const { id, name } = await req.json()
+  if (!id || !name) return NextResponse.json({ error: "Faltan datos" }, { status: 400 })
+  
+  try {
+    const updated = await prisma.tenant.update({ where: { id }, data: { name } })
+    return NextResponse.json(updated)
+  } catch (error) {
+    return NextResponse.json({ error: "Error al actualizar" }, { status: 500 })
+  }
+}
+
 export async function DELETE(req: Request) {
   const u = await getSessionUser()
   if (u?.role !== "SUPERADMIN") return NextResponse.json({ error: "Solo el Superadmin puede eliminar negocioes" }, { status: 403 })

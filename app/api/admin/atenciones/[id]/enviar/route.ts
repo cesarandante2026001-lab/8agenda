@@ -44,7 +44,7 @@ export async function POST(
 
   const resultado = await enviarAtencionPorEmail({
     to: atencion.patient.email,
-    clienteNombre: atencion.patient.name,
+    pacienteNombre: atencion.patient.name,
     negocio: atencion.tenant.name,
     especialista: atencion.specialist.name,
     especialidad: atencion.specialist.specialty.name,

@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     // Email de confirmacion (no bloquea la respuesta si falla)
     enviarConfirmacionReserva({
       to: data.patientEmail,
-      clienteNombre: data.patientName,
+      pacienteNombre: data.patientName,
       especialista: slot.specialist.name,
       especialidad: slot.specialist.specialty.name,
       fecha: formatearFecha(slot.date),

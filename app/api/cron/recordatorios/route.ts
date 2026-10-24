@@ -49,7 +49,7 @@ export async function GET(req: Request) {
     try {
       const r: any = await enviarRecordatorio({
         to: c.patientEmail,
-        clienteNombre: c.patientName,
+        pacienteNombre: c.patientName,
         especialista: c.specialist.name,
         especialidad: c.specialist.specialty.name,
         fecha: formatearFecha(c.slot.date),

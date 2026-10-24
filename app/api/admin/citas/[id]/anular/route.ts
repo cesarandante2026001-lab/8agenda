@@ -42,7 +42,7 @@ export async function POST(
   if (app.patientEmail) {
     enviarCancelacionReserva({
       to: app.patientEmail,
-      clienteNombre: app.patientName,
+      pacienteNombre: app.patientName,
       especialista: app.specialist.name,
       especialidad: app.specialist.specialty.name,
       fecha: formatearFecha(app.slot.date),

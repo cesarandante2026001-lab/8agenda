@@ -228,7 +228,7 @@ export default function DiasClient({ especialista }: { especialista: Especialist
     setGenerandoSlots(true)
     setOk("")
     try {
-      const r = await fetch(`/api/admin/especialistas/${id}/generar-slots`, { method: "POST" })
+      const r = await fetch(`/api/admin/especialistas/${specialistId}/generar-slots`, { method: "POST" })
       const data = await r.json()
       if (r.ok) {
         alert(`✅ Se generaron ${data.totalCreados} horas disponibles.`)

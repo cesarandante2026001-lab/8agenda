@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { currentUser } from "@/lib/auth-helpers-extra"
-import { tenantDelUsuario } from "@/lib/tenant"
+import { getUsuario } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 import BotonMarcar from "../citas/BotonMarcar"
 
