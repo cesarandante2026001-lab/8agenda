@@ -12,17 +12,7 @@ const schema = z.object({
 
 export async function GET() {
   const u = await getUsuario()
-  // TEMPORAL: Permitir crear especialidades sin sesión para destrabar
-  if (!u) { 
-    console.log("Creando especialidad sin sesion (modo debug)");
-    const tenant = await prisma.tenant.findFirst();
-    if (!tenant) return NextResponse.json({ error: "Sin negocio" }, { status: 400 });
-    const body = schema.parse(await req.json());
-    const especialidad = await prisma.specialty.create({
-      data: { tenantId: tenant.id, name: body.name, description: body.description || null, color: body.color, order: body.order }
-    });
-    return NextResponse.json({ especialidad }, { status: 201 });
-  }
+  if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
   const especialidades = await prisma.specialty.findMany({
     where: { ...withTenant(u) },
@@ -34,31 +24,24 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const u = await getUsuario()
-  // TEMPORAL: Permitir crear especialidades sin sesión para destrabar
-  if (!u) { 
-    console.log("Creando especialidad sin sesion (modo debug)");
-    const tenant = await prisma.tenant.findFirst();
-    if (!tenant) return NextResponse.json({ error: "Sin negocio" }, { status: 400 });
-    const body = schema.parse(await req.json());
-    const especialidad = await prisma.specialty.create({
-      data: { tenantId: tenant.id, name: body.name, description: body.description || null, color: body.color, order: body.order }
-    });
-    return NextResponse.json({ especialidad }, { status: 201 });
+  if (!u) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+
+  let targetTenantId = u.tenantId
+
+  if (!targetTenantId && esSuperadmin(u)) {
+    const unicoTenant = await prisma.tenant.findFirst()
+    if (unicoTenant) targetTenantId = unicoTenant.id
   }
 
-  if (!u.tenantId && !esSuperadmin(u)) {
-    return NextResponse.json({ error: "Usuario sin negocio asignada" }, { status: 400 })
-  }
-
-  if (!u.tenantId) {
-    return NextResponse.json({ error: "Superadmin debe especificar negocio" }, { status: 400 })
+  if (!targetTenantId) {
+    return NextResponse.json({ error: "No hay negocio configurado" }, { status: 400 })
   }
 
   const body = schema.parse(await req.json())
 
   const especialidad = await prisma.specialty.create({
     data: {
-      tenantId: u.tenantId,
+      tenantId: targetTenantId,
       name: body.name,
       description: body.description || null,
       color: body.color,
