@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth"
+import { auth } from "./auth"
 import { prisma } from "./prisma"
 
 export async function getUsuario() {
