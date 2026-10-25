@@ -88,7 +88,7 @@ export default async function FichaClientePage({
 
       <div className="mt-12">
         <h2 className="text-xl font-light mb-4">
-          Atenciones <span className="font-semibold">medicas</span>
+          Atenciones
         </h2>
         {cliente.atenciones.length === 0 ? (
           <p className="text-sm text-gray-500">Sin atenciones registradas.</p>
@@ -200,7 +200,7 @@ export default async function FichaClientePage({
 
       <div className="mt-12">
         <h2 className="text-xl font-light mb-4">
-          Historial de <span className="font-semibold">citas</span>
+          Historial de servicios
         </h2>
         {cliente.appointments.length === 0 ? (
           <p className="text-sm text-gray-500">Sin citas registradas.</p>
