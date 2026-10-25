@@ -33,7 +33,7 @@ export default async function AtencionesPage({
             OR: [
               { patient: { name: { contains: busqueda, mode: "insensitive" } } },
               { patient: { rut: { contains: busqueda, mode: "insensitive" } } },
-              { diagnostico: { contains: busqueda, mode: "insensitive" } },
+              { evaluacion: { contains: busqueda, mode: "insensitive" } },
               { motivoConsulta: { contains: busqueda, mode: "insensitive" } },
             ],
           }
@@ -63,7 +63,7 @@ export default async function AtencionesPage({
           type="text"
           name="q"
           defaultValue={busqueda}
-          placeholder="Buscar por cliente, RUT, diagnostico o motivo..."
+          placeholder="Buscar por cliente, RUT, evaluacion o motivo..."
           className="w-full px-4 py-3 border border-gray-300 rounded-md focus:border-black outline-none"
         />
       </form>
@@ -82,7 +82,7 @@ export default async function AtencionesPage({
                 <th className="text-left px-4 py-3">Fecha</th>
                 <th className="text-left px-4 py-3">Cliente</th>
                 <th className="text-left px-4 py-3">Profesional</th>
-                <th className="text-left px-4 py-3">Diagnostico</th>
+                <th className="text-left px-4 py-3">Evaluacion</th>
                 <th className="text-left px-4 py-3">Contenido</th>
                 <th className="text-right px-4 py-3">Accion</th>
               </tr>
@@ -103,7 +103,7 @@ export default async function AtencionesPage({
                     <div className="text-xs text-gray-500">{a.specialist.specialty.name}</div>
                   </td>
                   <td className="px-4 py-3 max-w-xs">
-                    <p className="truncate">{a.diagnostico || "-"}</p>
+                    <p className="truncate">{a.evaluacion || "-"}</p>
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-600">
                     {a._count.recetas > 0 && <span className="mr-3">{a._count.recetas} recomendación{a._count.recetas === 1 ? "" : "s"}</span>}
