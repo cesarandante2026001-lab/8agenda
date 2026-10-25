@@ -14,12 +14,12 @@ const schema = z.object({
   prevision: z.string().max(50).optional().or(z.literal("")),
   contactoEmergencia: z.string().max(100).optional().or(z.literal("")),
   telefonoEmergencia: z.string().max(30).optional().or(z.literal("")),
-  alergias: z.string().max(500).optional().or(z.literal("")),
+  NOTAS: z.string().max(500).optional().or(z.literal("")),
   enfermedadesCronicas: z.string().max(500).optional().or(z.literal("")),
-  medicamentos: z.string().max(500).optional().or(z.literal("")),
+  INSUMOS: z.string().max(500).optional().or(z.literal("")),
   antecedentesFamiliares: z.string().max(500).optional().or(z.literal("")),
   grupoSanguineo: z.string().max(10).optional().or(z.literal("")),
-  observaciones: z.string().max(1000).optional().or(z.literal("")),
+  NOTAS: z.string().max(1000).optional().or(z.literal("")),
 })
 
 export async function PATCH(
@@ -51,12 +51,12 @@ export async function PATCH(
       prevision: body.prevision || null,
       contactoEmergencia: body.contactoEmergencia || null,
       telefonoEmergencia: body.telefonoEmergencia || null,
-      alergias: body.alergias || null,
+      NOTAS: body.NOTAS || null,
       enfermedadesCronicas: body.enfermedadesCronicas || null,
-      medicamentos: body.medicamentos || null,
+      INSUMOS: body.INSUMOS || null,
       antecedentesFamiliares: body.antecedentesFamiliares || null,
       grupoSanguineo: body.grupoSanguineo || null,
-      observaciones: body.observaciones || null,
+      NOTAS: body.NOTAS || null,
     },
   })
 

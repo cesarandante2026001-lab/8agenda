@@ -139,7 +139,7 @@ export default function FormAtencion({
 
       <section className="border border-gray-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs uppercase tracking-wider text-gray-500">Insumos / Repuestos / Medicamentos</p>
+          <p className="text-xs uppercase tracking-wider text-gray-500">Insumos / Repuestos / INSUMOS</p>
           <button
             type="button"
             onClick={agregarReceta}

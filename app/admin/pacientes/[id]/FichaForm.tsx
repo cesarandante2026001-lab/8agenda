@@ -14,12 +14,12 @@ type Cliente = {
   prevision: string
   contactoEmergencia: string
   telefonoEmergencia: string
-  alergias: string
+  NOTAS: string
   enfermedadesCronicas: string
-  medicamentos: string
+  INSUMOS: string
   antecedentesFamiliares: string
   grupoSanguineo: string
-  observaciones: string
+  NOTAS: string
 }
 
 export default function FichaForm({ cliente }: { cliente: Cliente }) {
@@ -70,19 +70,19 @@ export default function FichaForm({ cliente }: { cliente: Cliente }) {
       </section>
 
       <section className="border border-gray-200 rounded-lg p-6">
-        <p className="text-xs uppercase tracking-wider text-gray-500 mb-4">Ficha medica</p>
+        <p className="text-xs uppercase tracking-wider text-gray-500 mb-4">FICHA DEL CLIENTE</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Campo label="Grupo sanguineo" value={form.grupoSanguineo} onChange={(v) => set("grupoSanguineo", v)} placeholder="O+, A-, etc." />
-          <Campo label="Alergias" value={form.alergias} onChange={(v) => set("alergias", v)} />
-          <Campo label="Enfermedades cronicas" value={form.enfermedadesCronicas} onChange={(v) => set("enfermedadesCronicas", v)} />
-          <Campo label="Medicamentos" value={form.medicamentos} onChange={(v) => set("medicamentos", v)} />
-          <Campo label="Antecedentes familiares" value={form.antecedentesFamiliares} onChange={(v) => set("antecedentesFamiliares", v)} />
+          <Campo label="MEDIDA 1" value={form.grupoSanguineo} onChange={(v) => set("grupoSanguineo", v)} placeholder="O+, A-, etc." />
+          <Campo label="NOTAS" value={form.NOTAS} onChange={(v) => set("NOTAS", v)} />
+          <Campo label="ANTECEDENTES" value={form.enfermedadesCronicas} onChange={(v) => set("enfermedadesCronicas", v)} />
+          <Campo label="INSUMOS" value={form.INSUMOS} onChange={(v) => set("INSUMOS", v)} />
+          <Campo label="DETALLES ADICIONALES" value={form.antecedentesFamiliares} onChange={(v) => set("antecedentesFamiliares", v)} />
         </div>
         <div className="mt-4">
-          <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">Observaciones</label>
+          <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">NOTAS</label>
           <textarea
-            value={form.observaciones}
-            onChange={(e) => set("observaciones", e.target.value)}
+            value={form.NOTAS}
+            onChange={(e) => set("NOTAS", e.target.value)}
             rows={3}
             className="w-full px-4 py-3 border border-gray-300 rounded-md focus:border-black outline-none"
           />

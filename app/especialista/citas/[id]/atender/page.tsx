@@ -83,9 +83,9 @@ export default async function AtenderPage({
         <div className="text-sm text-gray-600 mt-1 space-y-0.5">
           {cita.patientRut && <p>RUT: {cita.patientRut}</p>}
           {cita.patient?.prevision && <p>Prevision: {cita.patient.prevision}</p>}
-          {cita.patient?.alergias && <p className="text-red-700">Alergias: {cita.patient.alergias}</p>}
+          {cita.patient?.NOTAS && <p className="text-red-700">NOTAS: {cita.patient.NOTAS}</p>}
           {cita.patient?.enfermedadesCronicas && <p>Enf. cronicas: {cita.patient.enfermedadesCronicas}</p>}
-          {cita.patient?.medicamentos && <p>Medicamentos: {cita.patient.medicamentos}</p>}
+          {cita.patient?.INSUMOS && <p>INSUMOS: {cita.patient.INSUMOS}</p>}
         </div>
         {cita.patient && (
           <Link

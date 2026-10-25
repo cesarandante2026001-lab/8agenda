@@ -78,12 +78,12 @@ export default async function FichaClientePage({
         prevision: cliente.prevision || "",
         contactoEmergencia: cliente.contactoEmergencia || "",
         telefonoEmergencia: cliente.telefonoEmergencia || "",
-        alergias: cliente.alergias || "",
+        NOTAS: cliente.NOTAS || "",
         enfermedadesCronicas: cliente.enfermedadesCronicas || "",
-        medicamentos: cliente.medicamentos || "",
+        INSUMOS: cliente.INSUMOS || "",
         antecedentesFamiliares: cliente.antecedentesFamiliares || "",
         grupoSanguineo: cliente.grupoSanguineo || "",
-        observaciones: cliente.observaciones || "",
+        NOTAS: cliente.NOTAS || "",
       }} />
 
       <div className="mt-12">
