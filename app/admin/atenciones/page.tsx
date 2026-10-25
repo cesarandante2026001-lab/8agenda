@@ -106,7 +106,7 @@ export default async function AtencionesPage({
                     <p className="truncate">{a.evaluacion || "-"}</p>
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-600">
-                    {a._count.recetas > 0 && <span className="mr-3">{a._count.recetas} recomendaciÃ³n{a._count.recetas === 1 ? "" : "s"}</span>}
+                    {a._count.recetas > 0 && <span className="mr-3">{a._count.recetas} recomendaciÃƒÂ³n{a._count.recetas === 1 ? "" : "s"}</span>}
                     {a._count.examenes > 0 && <span>{a._count.examenes} examen{a._count.examenes === 1 ? "" : "es"}</span>}
                     {a._count.recetas === 0 && a._count.examenes === 0 && <span className="text-gray-400">-</span>}
                   </td>
