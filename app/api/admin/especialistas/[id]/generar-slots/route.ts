@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import { getUsuario, withTenant } from "@/lib/tenant"
 import { prisma } from "@/lib/prisma"
 
+export const dynamic = "force-dynamic"
+export const maxDuration = 60
+
 export async function POST(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -21,7 +24,7 @@ export async function POST(
     })
 
     if (dias.length === 0) {
-      return NextResponse.json({ error: "No hay dias activos." }, { status: 400 })
+      return NextResponse.json({ error: "No hay dias activos. Genera primero el mes con patron." }, { status: 400 })
     }
 
     const duracion = esp.duracionConsulta || 20
@@ -29,8 +32,9 @@ export async function POST(
     // Borrar slots LIBRES previos
     await prisma.slot.deleteMany({ where: { specialistId: id, status: "LIBRE" } })
 
-    // Crear slots en lotes pequenos para evitar timeout
     let totalCreados = 0
+
+    // Procesar de a UN dia a la vez para evitar timeout
     for (const dia of dias) {
       const inicio = dia.startTime || "09:00"
       const fin = dia.endTime || "18:00"
